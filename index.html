@@ -3,109 +3,169 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Моё Mini App</title>
+    <title>Тёмное Mini App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
+        /* Принудительно тёмные цвета, игнорируем тему Telegram */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
+
         body {
+            background-color: #0a0a0a;  /* глубокий чёрный фон */
+            color: #e0e0e0;             /* светлый текст, не слепящий */
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background: var(--tg-theme-bg-color, #ffffff);
-            color: var(--tg-theme-text-color, #000000);
             padding: 20px;
         }
+
         .container {
             max-width: 400px;
             margin: 0 auto;
         }
+
+        /* Карточки — тёмно-серые, с лёгкой границей */
         .card {
-            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
-            border-radius: 16px;
+            background-color: #1e1e1e;
+            border-radius: 20px;
             padding: 20px;
             margin-bottom: 16px;
+            border: 1px solid #2c2c2c;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
         }
+
+        /* Заголовки */
+        h2 {
+            color: #ffffff;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        p {
+            color: #b0b0b0;
+            line-height: 1.4;
+        }
+
+        /* Блок с информацией о пользователе */
+        .user-info {
+            background-color: #121212;
+            border: 1px solid #2c2c2c;
+            border-radius: 16px;
+            padding: 16px;
+            margin: 16px 0;
+            font-size: 14px;
+            color: #cccccc;
+        }
+
+        .user-info strong {
+            color: #ffffff;
+        }
+
+        /* Кнопки */
         button {
-            background: var(--tg-theme-button-color, #2481cc);
-            color: var(--tg-theme-button-text-color, #ffffff);
+            background-color: #2c2c2c;
             border: none;
+            color: #ffffff;
             padding: 12px 24px;
-            border-radius: 12px;
+            border-radius: 14px;
             font-size: 16px;
             font-weight: 600;
             width: 100%;
             cursor: pointer;
             margin-top: 8px;
+            transition: all 0.2s ease;
+            border: 1px solid #3a3a3a;
         }
-        .user-info {
-            background: var(--tg-theme-bg-color, #ffffff);
-            border: 1px solid var(--tg-theme-hint-color, #cccccc);
-            border-radius: 12px;
-            padding: 16px;
-            margin: 16px 0;
+
+        button:hover {
+            background-color: #3a3a3a;
+            transform: scale(0.98);
+        }
+
+        button:active {
+            background-color: #444444;
+        }
+
+        /* Специальный стиль для акцентной кнопки (если нужна) */
+        .btn-primary {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+        }
+
+        .btn-primary:hover {
+            background-color: #0b5ed7;
+        }
+
+        /* Ссылки (если будут) */
+        a {
+            color: #66b0ff;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="card">
-            <h2>👋 Привет из Mini App!</h2>
-            <p>Это ваше первое мини-приложение для Telegram.</p>
+            <h2>🌙 Тёмный режим</h2>
+            <p>Это мини-приложение всегда выглядит тёмным — независимо от темы Telegram.</p>
         </div>
 
         <div class="user-info" id="userInfo">
-            Загрузка данных пользователя...
+            Загрузка данных...
         </div>
 
-        <button id="closeBtn">Закрыть приложение</button>
+        <button id="closeBtn">Закрыть</button>
         <button id="sendDataBtn">Отправить данные боту</button>
     </div>
 
     <script>
-        // Инициализируем Telegram WebApp
         const tg = window.Telegram.WebApp;
-        
-        // Расширяем на весь экран
+
+        // Растягиваем на весь экран
         tg.expand();
-        
-        // Показываем основную кнопку внизу экрана (опционально)
+
+        // Принудительно устанавливаем цвет фона и шапки в Telegram (опционально)
+        tg.setBackgroundColor("#0a0a0a");
+        tg.setHeaderColor("#0a0a0a");
+
+        // Настройка основной кнопки (внизу экрана)
         tg.MainButton.setText("Готово");
         tg.MainButton.show();
-        
-        // Обработчик основной кнопки
         tg.MainButton.onClick(() => {
             tg.showPopup({
                 title: "Уведомление",
-                message: "Вы нажали на основную кнопку!",
+                message: "Вы нажали основную кнопку",
                 buttons: [{type: "ok"}]
             });
         });
-        
+
         // Получаем данные пользователя
         const user = tg.initDataUnsafe?.user;
-        
+
         if (user) {
             document.getElementById('userInfo').innerHTML = `
-                <strong>Ваши данные из Telegram:</strong><br>
+                <strong>👤 Пользователь Telegram</strong><br>
                 🆔 ID: ${user.id}<br>
-                👤 Имя: ${user.first_name} ${user.last_name || ''}<br>
+                👋 Имя: ${user.first_name} ${user.last_name || ''}<br>
                 @${user.username || 'нет username'}<br>
-                ${user.language_code ? `🌐 Язык: ${user.language_code}` : ''}
+                🌐 Язык: ${user.language_code || 'не указан'}
             `;
         } else {
             document.getElementById('userInfo').innerHTML = `
-                ℹ️ Приложение открыто вне Telegram или данные недоступны.<br>
-                <small>(Это нормально при локальной разработке)</small>
+                ℹ️ Тестовый режим (вне Telegram)
             `;
         }
-        
+
         // Закрыть приложение
         document.getElementById('closeBtn').addEventListener('click', () => {
             tg.close();
         });
-        
+
         // Отправить данные боту
         document.getElementById('sendDataBtn').addEventListener('click', () => {
             tg.sendData(JSON.stringify({
