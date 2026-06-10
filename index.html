@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Mini App — Пиксельный шрифт + Смена темы</title>
+    <title>Mini App — Пиксельный шрифт + Тема</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * {
@@ -11,7 +11,7 @@
             padding: 0;
             box-sizing: border-box;
             transition: background-color 0.2s, color 0.2s;
-            /* Принудительный пиксельный шрифт для всех элементов */
+            /* Пиксельный шрифт для всех элементов */
             font-family: 'Courier New', 'Lucida Console', 'Monaco', monospace !important;
         }
 
@@ -20,7 +20,7 @@
             min-height: 100vh;
         }
 
-        /* Кнопка смены темы (в правом верхнем углу) */
+        /* Кнопка смены темы (правый верхний угол) */
         .theme-switch {
             position: fixed;
             top: 20px;
@@ -38,24 +38,25 @@
             transform: scale(0.94);
         }
 
-        /* Всплывающее уведомление (тост) */
+        /* Тост (уведомление) */
         .toast {
             position: fixed;
             top: 80px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0,0,0,0.75);
+            background: rgba(0,0,0,0.85);
             backdrop-filter: blur(8px);
             color: white;
-            padding: 8px 16px;
+            padding: 8px 20px;
             border-radius: 40px;
-            font-size: 14px;
+            font-size: 15px;
             font-weight: 500;
             z-index: 1001;
             pointer-events: none;
             opacity: 0;
-            transition: opacity 0.2s;
+            transition: opacity 0.25s ease;
             white-space: nowrap;
+            font-family: 'Courier New', monospace !important;
         }
         .toast.show {
             opacity: 1;
@@ -85,7 +86,7 @@
             cursor: pointer;
         }
 
-        /* ---------- ТЕМЫ (меняются только фон, карточки, кнопки) ---------- */
+        /* ---------- ТЕМЫ ---------- */
         body.theme-light {
             background: #f5f5f7;
             color: #1c1c1e;
@@ -166,20 +167,19 @@
     </style>
 </head>
 <body>
-    <!-- Кнопка смены темы (одна) -->
     <div class="theme-switch" id="themeSwitch"></div>
     <div class="toast" id="toast"></div>
 
     <div class="container">
         <div class="card">
             <h2>🕹️ Пиксельный стиль</h2>
-            <p>Шрифт навсегда установлен в стиле Minecraft / ретро-игр.</p>
-            <p>🎨 Нажми на кружок справа вверху, чтобы менять тему оформления.</p>
+            <p>Шрифт всегда в духе Minecraft / ретро-игр.</p>
+            <p>🎨 Нажми на кружок справа вверху — тема поменяется.</p>
             <button class="demo-btn" id="demoBtn">Показать текущую тему</button>
         </div>
         <div class="card">
-            <p>✨ Весь текст выглядит как в игре.</p>
-            <p>Цвета и фоны адаптируются под выбранную тему.</p>
+            <p>✨ Название темы показывается ровно 1.5 секунды и плавно исчезает.</p>
+            <p>Скорость исчезновения теперь одинаковая для всех тем.</p>
         </div>
     </div>
 
@@ -188,7 +188,7 @@
         tg.expand();
         tg.MainButton.hide();
 
-        // --- Список тем ---
+        // --- Темы ---
         const themes = [
             { id: 'light',  name: 'Светлая',  color: '#f1c40f' },
             { id: 'dark',   name: 'Тёмная',   color: '#f9e45b' },
@@ -198,14 +198,27 @@
             { id: 'blue',   name: 'Синяя',    color: '#6aa9ff' }
         ];
 
-        let currentThemeIndex = 1; // стартуем с тёмной
+        let currentThemeIndex = 1; // по умолчанию тёмная
         const themeSwitch = document.getElementById('themeSwitch');
         const toast = document.getElementById('toast');
+        let toastTimeout = null;
 
         function showToast(message) {
+            // Сбрасываем предыдущий таймер, чтобы надпись не исчезала раньше времени
+            if (toastTimeout) {
+                clearTimeout(toastTimeout);
+                toastTimeout = null;
+            }
+            // Убираем класс, чтобы сбросить анимацию (если уже показывается)
+            toast.classList.remove('show');
+            // Небольшой форсированный reflow для перезапуска анимации
+            void toast.offsetWidth;
             toast.textContent = message;
             toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 1500);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+                toastTimeout = null;
+            }, 1500); // ровно 1.5 секунды
         }
 
         function applyTheme(index) {
@@ -228,8 +241,7 @@
         function loadSavedTheme() {
             const saved = localStorage.getItem('selectedThemeIndex');
             let idx = (saved !== null && !isNaN(parseInt(saved))) ? parseInt(saved) : 1;
-            if (idx < 0) idx = 0;
-            if (idx >= themes.length) idx = themes.length - 1;
+            idx = Math.min(Math.max(0, idx), themes.length - 1);
             applyTheme(idx);
         }
 
@@ -239,7 +251,7 @@
             const currentTheme = themes[currentThemeIndex];
             tg.showPopup({
                 title: '🎨 Текущая тема',
-                message: `Активна тема: "${currentTheme.name}"\nШрифт — пиксельный (Minecraft)`,
+                message: `Тема: "${currentTheme.name}"\nШрифт — пиксельный (Minecraft)`,
                 buttons: [{type: 'ok'}]
             });
         });
