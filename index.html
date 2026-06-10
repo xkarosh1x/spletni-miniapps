@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Mini App — Пиксель + Профиль + Язык</title>
+    <title>Mini App — Вкладки + Пиксель</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * {
@@ -15,7 +15,7 @@
         }
 
         body {
-            padding: 20px;
+            padding: 20px 20px 80px 20px; /* отступ снизу под таб-бар */
             min-height: 100vh;
         }
 
@@ -85,17 +85,59 @@
             opacity: 1;
         }
 
-        .container {
-            max-width: 450px;
-            margin: 0 auto;
-            padding-top: 20px;
+        /* Нижний таб-бар */
+        .tab-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            background: rgba(30,30,30,0.95);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding: 8px 16px;
+            z-index: 1002;
+        }
+        .tab-item {
+            flex: 1;
+            text-align: center;
+            padding: 8px 0;
+            cursor: pointer;
+            border-radius: 40px;
+            transition: 0.1s;
+            font-weight: 600;
+            font-size: 14px;
+            color: #aaa;
+        }
+        .tab-item.active {
+            background: rgba(255,255,255,0.15);
+            color: #fff;
+        }
+        body.theme-light .tab-bar {
+            background: rgba(245,245,247,0.95);
+            border-top-color: rgba(0,0,0,0.1);
+        }
+        body.theme-light .tab-item {
+            color: #555;
+        }
+        body.theme-light .tab-item.active {
+            background: rgba(0,0,0,0.1);
+            color: #000;
         }
 
+        /* Страницы (вкладки) */
         .page {
             display: none;
         }
         .page.active {
             display: block;
+        }
+
+        .container {
+            max-width: 450px;
+            margin: 0 auto;
         }
 
         .card {
@@ -116,7 +158,7 @@
             cursor: pointer;
         }
 
-        /* Профиль */
+        /* Анкета (профиль) */
         .avatar-container {
             display: flex;
             justify-content: center;
@@ -167,6 +209,29 @@
             margin: 10px 0;
         }
 
+        /* Задачи: чекбоксы */
+        .task-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .task-item input {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        /* Поддержка: форма */
+        .support-input, .support-textarea {
+            width: 100%;
+            padding: 10px;
+            border-radius: 16px;
+            border: 1px solid #aaa;
+            margin-bottom: 12px;
+            background: rgba(255,255,255,0.1);
+        }
+
         /* ----- ТЕМЫ (общие для всех страниц) ----- */
         body.theme-light {
             background: #f5f5f7;
@@ -184,10 +249,6 @@
             background: #f0f0f2;
             color: #1c1c1e;
             border-color: #ccc;
-        }
-        body.theme-light .lang-switch {
-            background: #2c2c2c;
-            color: white;
         }
 
         body.theme-dark {
@@ -207,10 +268,6 @@
             color: #e0e0e0;
             border-color: #444;
         }
-        body.theme-dark .lang-switch {
-            background: #2c2c2c;
-            color: white;
-        }
 
         body.theme-purple {
             background: #17092b;
@@ -228,10 +285,6 @@
             background: #3a235a;
             color: #e2d6ff;
             border-color: #7a4fa0;
-        }
-        body.theme-purple .lang-switch {
-            background: #2c2c2c;
-            color: white;
         }
 
         body.theme-green {
@@ -251,10 +304,6 @@
             color: #c8f0dc;
             border-color: #3a8a5a;
         }
-        body.theme-green .lang-switch {
-            background: #2c2c2c;
-            color: white;
-        }
 
         body.theme-red {
             background: #2b0c0c;
@@ -272,10 +321,6 @@
             background: #5e2a2a;
             color: #ffd6d6;
             border-color: #b55a5a;
-        }
-        body.theme-red .lang-switch {
-            background: #2c2c2c;
-            color: white;
         }
 
         body.theme-blue {
@@ -295,10 +340,6 @@
             color: #cfe3ff;
             border-color: #5a8ac0;
         }
-        body.theme-blue .lang-switch {
-            background: #2c2c2c;
-            color: white;
-        }
     </style>
 </head>
 <body>
@@ -306,23 +347,29 @@
     <div class="theme-switch" id="themeSwitch"></div>
     <div class="toast" id="toast"></div>
 
-    <!-- Главная страница -->
-    <div id="mainPage" class="page active">
+    <!-- Вкладка: Задачи -->
+    <div id="tasksPage" class="page">
         <div class="container">
             <div class="card">
-                <h2 id="mainTitle">🕹️ Пиксельный стиль</h2>
-                <p id="mainDesc1">Шрифт всегда в духе Minecraft / ретро-игр.</p>
-                <p id="mainDesc2">🎨 Нажми на кружок справа вверху — тема поменяется.</p>
-                <button class="btn" id="profileBtn">👤 Мой профиль</button>
-            </div>
-            <div class="card">
-                <p id="mainDesc3">✨ Название темы показывается ровно 1.5 секунды.</p>
-                <p id="mainDesc4">Скорость исчезновения одинаковая для всех тем.</p>
+                <h2 id="tasksTitle">📋 Задачи</h2>
+                <div id="tasksList">
+                    <!-- динамические задачи -->
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Страница профиля -->
+    <!-- Вкладка: Чаты -->
+    <div id="chatsPage" class="page">
+        <div class="container">
+            <div class="card">
+                <h2 id="chatsTitle">💬 Чаты</h2>
+                <p id="chatsPlaceholder">Скоро здесь появятся ваши диалоги...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Вкладка: Анкета (профиль) -->
     <div id="profilePage" class="page">
         <div class="container">
             <div class="card">
@@ -340,9 +387,28 @@
                     <label id="labelAvatar">🖼️ Загрузить аватар</label>
                     <input type="file" id="avatarInput" accept="image/*" class="file-input">
                 </div>
-                <button class="btn" id="backToMainBtn">← На главную</button>
             </div>
         </div>
+    </div>
+
+    <!-- Вкладка: Поддержка -->
+    <div id="supportPage" class="page">
+        <div class="container">
+            <div class="card">
+                <h2 id="supportTitle">🛠️ Поддержка</h2>
+                <input type="text" id="supportSubject" class="support-input" placeholder="Тема">
+                <textarea id="supportMessage" rows="4" class="support-textarea" placeholder="Сообщение"></textarea>
+                <button class="btn" id="sendSupportBtn">Отправить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Нижний таб-бар -->
+    <div class="tab-bar">
+        <div class="tab-item" data-tab="tasks">📋 <span id="tabTasksLabel">Задачи</span></div>
+        <div class="tab-item" data-tab="chats">💬 <span id="tabChatsLabel">Чаты</span></div>
+        <div class="tab-item" data-tab="profile">👤 <span id="tabProfileLabel">Анкета</span></div>
+        <div class="tab-item" data-tab="support">🛠️ <span id="tabSupportLabel">Поддержка</span></div>
     </div>
 
     <script>
@@ -356,12 +422,40 @@
             user = { id: 123456, first_name: "Игрок", last_name: "", username: "pixel_player" };
         }
 
-        // --- Элементы ---
-        const themeSwitch = document.getElementById('themeSwitch');
-        const langSwitch = document.getElementById('langSwitch');
+        // --- Элементы табов ---
+        const pages = {
+            tasks: document.getElementById('tasksPage'),
+            chats: document.getElementById('chatsPage'),
+            profile: document.getElementById('profilePage'),
+            support: document.getElementById('supportPage')
+        };
+        let currentTab = 'tasks';
+
+        function showTab(tabId) {
+            // Скрыть все страницы
+            Object.values(pages).forEach(page => page.classList.remove('active'));
+            pages[tabId].classList.add('active');
+            // Обновить активный класс в таб-баре
+            document.querySelectorAll('.tab-item').forEach(item => {
+                if (item.dataset.tab === tabId) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+            currentTab = tabId;
+            localStorage.setItem('lastTab', tabId);
+            // Если открыли анкету – обновить аватар
+            if (tabId === 'profile') renderAvatar();
+        }
+
+        document.querySelectorAll('.tab-item').forEach(item => {
+            item.addEventListener('click', () => showTab(item.dataset.tab));
+        });
+
+        // --- Тост ---
         const toast = document.getElementById('toast');
         let toastTimeout = null;
-
         function showToast(message) {
             if (toastTimeout) clearTimeout(toastTimeout);
             toast.classList.remove('show');
@@ -378,39 +472,53 @@
         const translations = {
             ru: {
                 langName: 'Русский',
-                mainTitle: '🕹️ Пиксельный стиль',
-                mainDesc1: 'Шрифт всегда в духе Minecraft / ретро-игр.',
-                mainDesc2: '🎨 Нажми на кружок справа вверху — тема поменяется.',
-                mainDesc3: '✨ Название темы показывается ровно 1.5 секунды.',
-                mainDesc4: 'Скорость исчезновения одинаковая для всех тем.',
-                profileBtn: '👤 Мой профиль',
-                backBtn: '← На главную',
+                tabTasks: 'Задачи',
+                tabChats: 'Чаты',
+                tabProfile: 'Анкета',
+                tabSupport: 'Поддержка',
+                tasksTitle: '📋 Задачи',
+                chatsTitle: '💬 Чаты',
+                chatsPlaceholder: 'Скоро здесь появятся ваши диалоги...',
+                supportTitle: '🛠️ Поддержка',
+                supportSubjectPlaceholder: 'Тема',
+                supportMessagePlaceholder: 'Сообщение',
+                supportSendBtn: 'Отправить',
+                supportSent: 'Сообщение отправлено (демо)',
                 labelTgId: 'Telegram ID:',
                 labelUsername: 'Username:',
                 labelFirstName: 'Имя:',
                 labelBio: '✏️ Описание профиля',
                 labelAvatar: '🖼️ Загрузить аватар',
                 bioPlaceholder: 'Расскажите о себе...',
-                toastThemeChanged: 'Тема: ',
-                toastLangChanged: 'Язык: '
+                task1: 'Изучить документацию Telegram Mini Apps',
+                task2: 'Сделать дизайн в пиксельном стиле',
+                task3: 'Добавить нижнее меню',
+                task4: 'Протестировать на всех темах'
             },
             en: {
                 langName: 'English',
-                mainTitle: '🕹️ Pixel style',
-                mainDesc1: 'Font is always in Minecraft / retro games style.',
-                mainDesc2: '🎨 Tap the circle on the top right — theme will change.',
-                mainDesc3: '✨ Theme name is shown for exactly 1.5 seconds.',
-                mainDesc4: 'Fade speed is the same for all themes.',
-                profileBtn: '👤 My profile',
-                backBtn: '← Back to main',
+                tabTasks: 'Tasks',
+                tabChats: 'Chats',
+                tabProfile: 'Profile',
+                tabSupport: 'Support',
+                tasksTitle: '📋 Tasks',
+                chatsTitle: '💬 Chats',
+                chatsPlaceholder: 'Your conversations will appear here soon...',
+                supportTitle: '🛠️ Support',
+                supportSubjectPlaceholder: 'Subject',
+                supportMessagePlaceholder: 'Message',
+                supportSendBtn: 'Send',
+                supportSent: 'Message sent (demo)',
                 labelTgId: 'Telegram ID:',
                 labelUsername: 'Username:',
                 labelFirstName: 'Name:',
                 labelBio: '✏️ Profile bio',
                 labelAvatar: '🖼️ Upload avatar',
                 bioPlaceholder: 'Tell about yourself...',
-                toastThemeChanged: 'Theme: ',
-                toastLangChanged: 'Language: '
+                task1: 'Learn Telegram Mini Apps docs',
+                task2: 'Make pixel style design',
+                task3: 'Add bottom tab bar',
+                task4: 'Test on all themes'
             }
         };
 
@@ -419,24 +527,60 @@
         function applyLanguage(lang) {
             const t = translations[lang];
             if (!t) return;
-            document.getElementById('mainTitle').innerText = t.mainTitle;
-            document.getElementById('mainDesc1').innerText = t.mainDesc1;
-            document.getElementById('mainDesc2').innerText = t.mainDesc2;
-            document.getElementById('mainDesc3').innerText = t.mainDesc3;
-            document.getElementById('mainDesc4').innerText = t.mainDesc4;
-            document.getElementById('profileBtn').innerText = t.profileBtn;
-            document.getElementById('backToMainBtn').innerText = t.backBtn;
+            // Тексты табов
+            document.getElementById('tabTasksLabel').innerText = t.tabTasks;
+            document.getElementById('tabChatsLabel').innerText = t.tabChats;
+            document.getElementById('tabProfileLabel').innerText = t.tabProfile;
+            document.getElementById('tabSupportLabel').innerText = t.tabSupport;
+            // Заголовки страниц
+            document.getElementById('tasksTitle').innerText = t.tasksTitle;
+            document.getElementById('chatsTitle').innerText = t.chatsTitle;
+            document.getElementById('chatsPlaceholder').innerText = t.chatsPlaceholder;
+            document.getElementById('supportTitle').innerText = t.supportTitle;
+            const subjectInput = document.getElementById('supportSubject');
+            const messageInput = document.getElementById('supportMessage');
+            subjectInput.placeholder = t.supportSubjectPlaceholder;
+            messageInput.placeholder = t.supportMessagePlaceholder;
+            document.getElementById('sendSupportBtn').innerText = t.supportSendBtn;
+            // Анкета
             document.getElementById('labelTgId').innerHTML = t.labelTgId;
             document.getElementById('labelUsername').innerHTML = t.labelUsername;
             document.getElementById('labelFirstName').innerHTML = t.labelFirstName;
             document.getElementById('labelBio').innerHTML = t.labelBio;
             document.getElementById('labelAvatar').innerHTML = t.labelAvatar;
-            const bioInput = document.getElementById('bioInput');
-            bioInput.placeholder = t.bioPlaceholder;
+            document.getElementById('bioInput').placeholder = t.bioPlaceholder;
+            // Задачи – обновить список
+            renderTasksList(lang);
             langSwitch.innerText = lang === 'ru' ? 'RU' : 'EN';
             localStorage.setItem('selectedLang', lang);
             currentLang = lang;
-            showToast(t.toastLangChanged + (lang === 'ru' ? 'Русский' : 'English'));
+            showToast(t.langName);
+        }
+
+        function renderTasksList(lang) {
+            const t = translations[lang];
+            const tasks = [
+                t.task1,
+                t.task2,
+                t.task3,
+                t.task4
+            ];
+            const container = document.getElementById('tasksList');
+            if (!container) return;
+            container.innerHTML = '';
+            tasks.forEach((task, idx) => {
+                const div = document.createElement('div');
+                div.className = 'task-item';
+                const chk = document.createElement('input');
+                chk.type = 'checkbox';
+                chk.id = `task${idx}`;
+                const label = document.createElement('label');
+                label.htmlFor = `task${idx}`;
+                label.innerText = task;
+                div.appendChild(chk);
+                div.appendChild(label);
+                container.appendChild(div);
+            });
         }
 
         function toggleLanguage() {
@@ -444,9 +588,9 @@
             applyLanguage(newLang);
         }
 
-        langSwitch.addEventListener('click', toggleLanguage);
+        document.getElementById('langSwitch').addEventListener('click', toggleLanguage);
 
-        // --- Темы (оставляем как было) ---
+        // --- Темы (прежние) ---
         const themes = [
             { id: 'light',  name: 'Светлая',  color: '#f1c40f' },
             { id: 'dark',   name: 'Тёмная',   color: '#f9e45b' },
@@ -456,6 +600,7 @@
             { id: 'blue',   name: 'Синяя',    color: '#6aa9ff' }
         ];
         let currentThemeIndex = 1;
+        const themeSwitch = document.getElementById('themeSwitch');
 
         function applyTheme(index) {
             const theme = themes[index];
@@ -465,21 +610,19 @@
             themeSwitch.style.boxShadow = `0 0 6px ${theme.color}`;
             currentThemeIndex = index;
             localStorage.setItem('selectedThemeIndex', index);
-            const lang = currentLang;
-            const t = translations[lang];
+            const t = translations[currentLang];
             showToast((t.toastThemeChanged || 'Тема: ') + theme.name);
         }
-
         function nextTheme() {
             applyTheme((currentThemeIndex + 1) % themes.length);
         }
-
         function loadSavedTheme() {
             const saved = localStorage.getItem('selectedThemeIndex');
             let idx = (saved !== null && !isNaN(parseInt(saved))) ? parseInt(saved) : 1;
             idx = Math.min(Math.max(0, idx), themes.length - 1);
             applyTheme(idx);
         }
+        themeSwitch.addEventListener('click', nextTheme);
 
         // --- Профиль (аватар, описание) ---
         const bioInput = document.getElementById('bioInput');
@@ -503,29 +646,22 @@
                 avatarContainer.appendChild(placeholder);
             }
         }
-
         function saveAvatar(base64) {
             currentAvatarBase64 = base64;
             localStorage.setItem('userAvatar', base64 || '');
             renderAvatar();
-            const t = translations[currentLang];
-            showToast(t.labelAvatar?.split(' ')[0] || 'Аватар обновлён');
+            showToast(translations[currentLang].labelAvatar.split(' ')[0] || 'Avatar updated');
         }
-
         avatarInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file && file.type.startsWith('image/')) {
                 const reader = new FileReader();
-                reader.onload = (ev) => {
-                    saveAvatar(ev.target.result);
-                };
+                reader.onload = (ev) => saveAvatar(ev.target.result);
                 reader.readAsDataURL(file);
             } else {
-                const t = translations[currentLang];
-                showToast(t.bioPlaceholder === 'Расскажите о себе...' ? 'Выберите изображение' : 'Select an image');
+                showToast(translations[currentLang].bioPlaceholder === 'Расскажите о себе...' ? 'Выберите изображение' : 'Select an image');
             }
         });
-
         let userBio = localStorage.getItem('userBio') || '';
         bioInput.value = userBio;
         bioInput.addEventListener('input', () => {
@@ -533,38 +669,33 @@
             localStorage.setItem('userBio', userBio);
         });
 
-        // Заполняем данные Telegram (не локализуются, сами данные)
+        // Данные Telegram
         document.getElementById('tgId').textContent = user.id;
         document.getElementById('tgUsername').textContent = user.username || '—';
         document.getElementById('tgFirstName').textContent = `${user.first_name || ''} ${user.last_name || ''}`.trim() || '—';
 
-        // --- Переключение страниц ---
-        const mainPage = document.getElementById('mainPage');
-        const profilePage = document.getElementById('profilePage');
-        const profileBtn = document.getElementById('profileBtn');
-        const backToMainBtn = document.getElementById('backToMainBtn');
-
-        function showPage(pageName) {
-            if (pageName === 'main') {
-                mainPage.classList.add('active');
-                profilePage.classList.remove('active');
-            } else {
-                mainPage.classList.remove('active');
-                profilePage.classList.add('active');
-                renderAvatar();
+        // --- Поддержка: демо-отправка ---
+        document.getElementById('sendSupportBtn').addEventListener('click', () => {
+            const subject = document.getElementById('supportSubject').value;
+            const message = document.getElementById('supportMessage').value;
+            if (!subject.trim() || !message.trim()) {
+                showToast(translations[currentLang].supportSubjectPlaceholder === 'Тема' ? 'Заполните тему и сообщение' : 'Fill subject and message');
+                return;
             }
-        }
-
-        profileBtn.addEventListener('click', () => showPage('profile'));
-        backToMainBtn.addEventListener('click', () => showPage('main'));
-
-        // --- События ---
-        themeSwitch.addEventListener('click', nextTheme);
+            // Имитация отправки
+            showToast(translations[currentLang].supportSent);
+            document.getElementById('supportSubject').value = '';
+            document.getElementById('supportMessage').value = '';
+        });
 
         // --- Инициализация ---
         loadSavedTheme();
         applyLanguage(currentLang);
         renderAvatar();
+        // Восстановление последней открытой вкладки
+        const lastTab = localStorage.getItem('lastTab');
+        if (lastTab && pages[lastTab]) showTab(lastTab);
+        else showTab('tasks');
     </script>
 </body>
 </html>
