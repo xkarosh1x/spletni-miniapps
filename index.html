@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Mini App — Пиксельный шрифт + Тема</title>
+    <title>Mini App — Пиксельный стиль + Профиль</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * {
@@ -11,7 +11,6 @@
             padding: 0;
             box-sizing: border-box;
             transition: background-color 0.2s, color 0.2s;
-            /* Пиксельный шрифт для всех элементов */
             font-family: 'Courier New', 'Lucida Console', 'Monaco', monospace !important;
         }
 
@@ -38,7 +37,7 @@
             transform: scale(0.94);
         }
 
-        /* Тост (уведомление) */
+        /* Тост */
         .toast {
             position: fixed;
             top: 80px;
@@ -56,7 +55,6 @@
             opacity: 0;
             transition: opacity 0.25s ease;
             white-space: nowrap;
-            font-family: 'Courier New', monospace !important;
         }
         .toast.show {
             opacity: 1;
@@ -68,6 +66,14 @@
             padding-top: 20px;
         }
 
+        /* Страницы */
+        .page {
+            display: none;
+        }
+        .page.active {
+            display: block;
+        }
+
         .card {
             border-radius: 28px;
             padding: 24px;
@@ -75,7 +81,7 @@
             box-shadow: 0 6px 14px rgba(0,0,0,0.1);
         }
 
-        .demo-btn {
+        .btn {
             width: 100%;
             padding: 12px;
             border: none;
@@ -86,7 +92,58 @@
             cursor: pointer;
         }
 
-        /* ---------- ТЕМЫ ---------- */
+        /* Профиль */
+        .avatar-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: #888;
+            border: 3px solid currentColor;
+        }
+        .avatar-placeholder {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: #888;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            font-weight: bold;
+            color: white;
+        }
+        .profile-info {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .profile-field {
+            margin: 16px 0;
+        }
+        .profile-field label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+        .profile-field input, .profile-field textarea {
+            width: 100%;
+            padding: 10px;
+            border-radius: 16px;
+            border: 1px solid #aaa;
+            background: rgba(255,255,255,0.1);
+            font-size: 14px;
+            resize: vertical;
+        }
+        .file-input {
+            margin: 10px 0;
+        }
+
+        /* ----- ТЕМЫ (общие для всех страниц) ----- */
         body.theme-light {
             background: #f5f5f7;
             color: #1c1c1e;
@@ -95,9 +152,14 @@
             background: #ffffff;
             border: 1px solid #e3e3e8;
         }
-        body.theme-light .demo-btn {
+        body.theme-light .btn {
             background: #007aff;
             color: white;
+        }
+        body.theme-light input, body.theme-light textarea {
+            background: #f0f0f2;
+            color: #1c1c1e;
+            border-color: #ccc;
         }
 
         body.theme-dark {
@@ -108,9 +170,14 @@
             background: #1e1e1e;
             border: 1px solid #2c2c2c;
         }
-        body.theme-dark .demo-btn {
+        body.theme-dark .btn {
             background: #0d6efd;
             color: white;
+        }
+        body.theme-dark input, body.theme-dark textarea {
+            background: #2a2a2a;
+            color: #e0e0e0;
+            border-color: #444;
         }
 
         body.theme-purple {
@@ -121,9 +188,14 @@
             background: #2a1642;
             border: 1px solid #6b3fa0;
         }
-        body.theme-purple .demo-btn {
+        body.theme-purple .btn {
             background: #9b59b6;
             color: white;
+        }
+        body.theme-purple input, body.theme-purple textarea {
+            background: #3a235a;
+            color: #e2d6ff;
+            border-color: #7a4fa0;
         }
 
         body.theme-green {
@@ -134,9 +206,14 @@
             background: #164e2c;
             border: 1px solid #2e8b57;
         }
-        body.theme-green .demo-btn {
+        body.theme-green .btn {
             background: #2ecc71;
             color: #0a2a16;
+        }
+        body.theme-green input, body.theme-green textarea {
+            background: #1e5a36;
+            color: #c8f0dc;
+            border-color: #3a8a5a;
         }
 
         body.theme-red {
@@ -147,9 +224,14 @@
             background: #4e1c1c;
             border: 1px solid #bf4b4b;
         }
-        body.theme-red .demo-btn {
+        body.theme-red .btn {
             background: #e74c3c;
             color: white;
+        }
+        body.theme-red input, body.theme-red textarea {
+            background: #5e2a2a;
+            color: #ffd6d6;
+            border-color: #b55a5a;
         }
 
         body.theme-blue {
@@ -160,9 +242,14 @@
             background: #1a2f5c;
             border: 1px solid #3a6ea5;
         }
-        body.theme-blue .demo-btn {
+        body.theme-blue .btn {
             background: #3b82f6;
             color: white;
+        }
+        body.theme-blue input, body.theme-blue textarea {
+            background: #1e3a6e;
+            color: #cfe3ff;
+            border-color: #5a8ac0;
         }
     </style>
 </head>
@@ -170,25 +257,77 @@
     <div class="theme-switch" id="themeSwitch"></div>
     <div class="toast" id="toast"></div>
 
-    <div class="container">
-        <div class="card">
-            <h2>🕹️ Пиксельный стиль</h2>
-            <p>Шрифт всегда в духе Minecraft / ретро-игр.</p>
-            <p>🎨 Нажми на кружок справа вверху — тема поменяется.</p>
-            <button class="demo-btn" id="demoBtn">Показать текущую тему</button>
+    <!-- Главная страница -->
+    <div id="mainPage" class="page active">
+        <div class="container">
+            <div class="card">
+                <h2>🕹️ Пиксельный стиль</h2>
+                <p>Шрифт всегда в духе Minecraft / ретро-игр.</p>
+                <p>🎨 Нажми на кружок справа вверху — тема поменяется.</p>
+                <button class="btn" id="profileBtn">👤 Мой профиль</button>
+            </div>
+            <div class="card">
+                <p>✨ Название темы показывается ровно 1.5 секунды.</p>
+                <p>Скорость исчезновения одинаковая для всех тем.</p>
+            </div>
         </div>
-        <div class="card">
-            <p>✨ Название темы показывается ровно 1.5 секунды и плавно исчезает.</p>
-            <p>Скорость исчезновения теперь одинаковая для всех тем.</p>
+    </div>
+
+    <!-- Страница профиля -->
+    <div id="profilePage" class="page">
+        <div class="container">
+            <div class="card">
+                <div class="avatar-container" id="avatarContainer">
+                    <!-- Сюда динамически вставим аватар или плейсхолдер -->
+                </div>
+                <div class="profile-info">
+                    <p><strong>Telegram ID:</strong> <span id="tgId">—</span></p>
+                    <p><strong>Username:</strong> <span id="tgUsername">—</span></p>
+                    <p><strong>Имя:</strong> <span id="tgFirstName">—</span></p>
+                </div>
+                <div class="profile-field">
+                    <label>✏️ Описание профиля</label>
+                    <textarea id="bioInput" rows="3" placeholder="Расскажите о себе..."></textarea>
+                </div>
+                <div class="profile-field">
+                    <label>🖼️ Загрузить аватар</label>
+                    <input type="file" id="avatarInput" accept="image/*" class="file-input">
+                </div>
+                <button class="btn" id="backToMainBtn">← На главную</button>
+            </div>
         </div>
     </div>
 
     <script>
+        // --- Telegram WebApp и данные пользователя ---
         const tg = window.Telegram.WebApp;
         tg.expand();
         tg.MainButton.hide();
 
-        // --- Темы ---
+        let user = tg.initDataUnsafe?.user || null;
+        if (!user) {
+            // Заглушка для тестирования вне Telegram
+            user = { id: 123456, first_name: "Игрок", last_name: "", username: "pixel_player" };
+        }
+
+        // --- Элементы ---
+        const themeSwitch = document.getElementById('themeSwitch');
+        const toast = document.getElementById('toast');
+        let toastTimeout = null;
+
+        function showToast(message) {
+            if (toastTimeout) clearTimeout(toastTimeout);
+            toast.classList.remove('show');
+            void toast.offsetWidth;
+            toast.textContent = message;
+            toast.classList.add('show');
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+                toastTimeout = null;
+            }, 1500);
+        }
+
+        // --- Темы (как раньше) ---
         const themes = [
             { id: 'light',  name: 'Светлая',  color: '#f1c40f' },
             { id: 'dark',   name: 'Тёмная',   color: '#f9e45b' },
@@ -197,29 +336,7 @@
             { id: 'red',    name: 'Красная',  color: '#ff8a7a' },
             { id: 'blue',   name: 'Синяя',    color: '#6aa9ff' }
         ];
-
-        let currentThemeIndex = 1; // по умолчанию тёмная
-        const themeSwitch = document.getElementById('themeSwitch');
-        const toast = document.getElementById('toast');
-        let toastTimeout = null;
-
-        function showToast(message) {
-            // Сбрасываем предыдущий таймер, чтобы надпись не исчезала раньше времени
-            if (toastTimeout) {
-                clearTimeout(toastTimeout);
-                toastTimeout = null;
-            }
-            // Убираем класс, чтобы сбросить анимацию (если уже показывается)
-            toast.classList.remove('show');
-            // Небольшой форсированный reflow для перезапуска анимации
-            void toast.offsetWidth;
-            toast.textContent = message;
-            toast.classList.add('show');
-            toastTimeout = setTimeout(() => {
-                toast.classList.remove('show');
-                toastTimeout = null;
-            }, 1500); // ровно 1.5 секунды
-        }
+        let currentThemeIndex = 1;
 
         function applyTheme(index) {
             const theme = themes[index];
@@ -233,9 +350,7 @@
         }
 
         function nextTheme() {
-            let newIndex = currentThemeIndex + 1;
-            if (newIndex >= themes.length) newIndex = 0;
-            applyTheme(newIndex);
+            applyTheme((currentThemeIndex + 1) % themes.length);
         }
 
         function loadSavedTheme() {
@@ -245,18 +360,89 @@
             applyTheme(idx);
         }
 
-        themeSwitch.addEventListener('click', nextTheme);
+        // --- Профиль: аватар, описание ---
+        const bioInput = document.getElementById('bioInput');
+        const avatarContainer = document.getElementById('avatarContainer');
+        const avatarInput = document.getElementById('avatarInput');
+        let currentAvatarBase64 = localStorage.getItem('userAvatar') || null;
 
-        document.getElementById('demoBtn').addEventListener('click', () => {
-            const currentTheme = themes[currentThemeIndex];
-            tg.showPopup({
-                title: '🎨 Текущая тема',
-                message: `Тема: "${currentTheme.name}"\nШрифт — пиксельный (Minecraft)`,
-                buttons: [{type: 'ok'}]
-            });
+        function renderAvatar() {
+            avatarContainer.innerHTML = '';
+            if (currentAvatarBase64) {
+                const img = document.createElement('img');
+                img.src = currentAvatarBase64;
+                img.className = 'avatar';
+                img.alt = 'avatar';
+                avatarContainer.appendChild(img);
+            } else {
+                const placeholder = document.createElement('div');
+                placeholder.className = 'avatar-placeholder';
+                const firstLetter = (user.first_name ? user.first_name.charAt(0) : '?').toUpperCase();
+                placeholder.textContent = firstLetter;
+                avatarContainer.appendChild(placeholder);
+            }
+        }
+
+        function saveAvatar(base64) {
+            currentAvatarBase64 = base64;
+            localStorage.setItem('userAvatar', base64 || '');
+            renderAvatar();
+            showToast('Аватар обновлён');
+        }
+
+        avatarInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    saveAvatar(ev.target.result);
+                };
+                reader.readAsDataURL(file);
+            } else {
+                showToast('Выберите изображение');
+            }
         });
 
+        // Загружаем описание
+        let userBio = localStorage.getItem('userBio') || '';
+        bioInput.value = userBio;
+        bioInput.addEventListener('input', () => {
+            userBio = bioInput.value;
+            localStorage.setItem('userBio', userBio);
+        });
+
+        // Заполняем данные Telegram
+        document.getElementById('tgId').textContent = user.id;
+        document.getElementById('tgUsername').textContent = user.username || '—';
+        document.getElementById('tgFirstName').textContent = `${user.first_name || ''} ${user.last_name || ''}`.trim() || '—';
+
+        // --- Переключение страниц ---
+        const mainPage = document.getElementById('mainPage');
+        const profilePage = document.getElementById('profilePage');
+        const profileBtn = document.getElementById('profileBtn');
+        const backToMainBtn = document.getElementById('backToMainBtn');
+
+        function showPage(pageName) {
+            if (pageName === 'main') {
+                mainPage.classList.add('active');
+                profilePage.classList.remove('active');
+            } else {
+                mainPage.classList.remove('active');
+                profilePage.classList.add('active');
+                // При каждом открытии профиля обновляем аватар (на случай, если изменился вне)
+                renderAvatar();
+            }
+        }
+
+        profileBtn.addEventListener('click', () => showPage('profile'));
+        backToMainBtn.addEventListener('click', () => showPage('main'));
+
+        // --- Кнопка смены темы ---
+        themeSwitch.addEventListener('click', nextTheme);
+
+        // --- Инициализация ---
         loadSavedTheme();
+        renderAvatar();
     </script>
 </body>
 </html>
