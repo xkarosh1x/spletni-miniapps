@@ -3,8 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Mini App — Кнопка смены тем</title>
+    <title>Mini App — Шрифты + Тёмная тема</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <!-- Подключаем шрифт Minecraft через CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/typeface-minecraft@1.0.0/index.min.css" rel="stylesheet">
+
+    <!-- Google Fonts для других шрифтов -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Open+Sans:wght@400;600;700&family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet">
+
     <style>
         * {
             margin: 0;
@@ -14,12 +21,37 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Minecraft', 'Courier New', monospace; /* Шрифт по умолчанию — Minecraft */
             padding: 20px;
             min-height: 100vh;
         }
 
-        /* Кнопка-круг в правом верхнем углу */
+        /* Кнопка смены шрифта (круг в правом верхнем углу) */
+        .font-switch {
+            position: fixed;
+            top: 20px;
+            right: 80px; /* Чуть левее, чтобы не перекрывать кнопку темы */
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            z-index: 1000;
+            border: 2px solid rgba(255,255,255,0.2);
+            transition: transform 0.1s, box-shadow 0.2s;
+            background-color: #2c2c2c; /* Цвет по умолчанию (будет меняться вместе с темой) */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: white;
+        }
+        .font-switch:active {
+            transform: scale(0.94);
+        }
+
+        /* Кнопка смены темы (круг в правом верхнем углу) */
         .theme-switch {
             position: fixed;
             top: 20px;
@@ -97,6 +129,9 @@
             background: #007aff;
             color: white;
         }
+        body.theme-light .font-switch {
+            background-color: #2c2c2c;
+        }
 
         body.theme-dark {
             background: #0a0a0a;
@@ -109,6 +144,9 @@
         body.theme-dark .demo-btn {
             background: #0d6efd;
             color: white;
+        }
+        body.theme-dark .font-switch {
+            background-color: #2c2c2c;
         }
 
         body.theme-purple {
@@ -123,6 +161,9 @@
             background: #9b59b6;
             color: white;
         }
+        body.theme-purple .font-switch {
+            background-color: #2c2c2c;
+        }
 
         body.theme-green {
             background: #0a2a16;
@@ -135,6 +176,9 @@
         body.theme-green .demo-btn {
             background: #2ecc71;
             color: #0a2a16;
+        }
+        body.theme-green .font-switch {
+            background-color: #2c2c2c;
         }
 
         body.theme-red {
@@ -149,6 +193,9 @@
             background: #e74c3c;
             color: white;
         }
+        body.theme-red .font-switch {
+            background-color: #2c2c2c;
+        }
 
         body.theme-blue {
             background: #0a1a3a;
@@ -162,21 +209,27 @@
             background: #3b82f6;
             color: white;
         }
+        body.theme-blue .font-switch {
+            background-color: #2c2c2c;
+        }
     </style>
 </head>
 <body>
+    <!-- Кнопка смены шрифта -->
+    <div class="font-switch" id="fontSwitch">Aa</div>
+    <!-- Кнопка смены темы -->
     <div class="theme-switch" id="themeSwitch"></div>
     <div class="toast" id="toast"></div>
 
     <div class="container">
         <div class="card">
-            <h2>🎨 Смена темы</h2>
-            <p>Нажми на кружок в правом верхнем углу — тема изменится.</p>
-            <p>Цвет кружка соответствует текущей теме.</p>
-            <button class="demo-btn" id="demoBtn">Показать текущую тему</button>
+            <h2>🎨 Смена шрифта и темы</h2>
+            <p>Нажми на <strong>левое</strong> кружок (Aa), чтобы изменить шрифт.</p>
+            <p>Нажми на <strong>правое</strong> кружок, чтобы изменить тему.</p>
+            <button class="demo-btn" id="demoBtn">Показать текущую тему и шрифт</button>
         </div>
         <div class="card">
-            <p>✨ Пример контента, который меняет цвета вместе с темой.</p>
+            <p>✨ Пример контента. Текст будет менять стиль вместе со шрифтом.</p>
         </div>
     </div>
 
@@ -185,7 +238,7 @@
         tg.expand();
         tg.MainButton.hide();
 
-        // Порядок тем: светлая → тёмная → фиолетовая → зелёная → красная → синяя → повтор
+        // --- Темы (оставляем как было) ---
         const themes = [
             { id: 'light',  name: 'Светлая',  color: '#f1c40f' },
             { id: 'dark',   name: 'Тёмная',   color: '#f9e45b' },
@@ -195,7 +248,8 @@
             { id: 'blue',   name: 'Синяя',    color: '#6aa9ff' }
         ];
 
-        let currentIndex = 1; // стартуем с тёмной (индекс 1)
+        let currentThemeIndex = 1; // стартуем с тёмной
+
         const themeSwitch = document.getElementById('themeSwitch');
         const toast = document.getElementById('toast');
 
@@ -209,20 +263,17 @@
 
         function applyTheme(index) {
             const theme = themes[index];
-            // меняем класс body
             document.body.classList.remove(...themes.map(t => `theme-${t.id}`));
             document.body.classList.add(`theme-${theme.id}`);
-            // меняем цвет кнопки
             themeSwitch.style.backgroundColor = theme.color;
             themeSwitch.style.boxShadow = `0 0 6px ${theme.color}`;
-            // сохраняем
-            currentIndex = index;
+            currentThemeIndex = index;
             localStorage.setItem('selectedThemeIndex', index);
             showToast(`Тема: ${theme.name}`);
         }
 
         function nextTheme() {
-            let newIndex = currentIndex + 1;
+            let newIndex = currentThemeIndex + 1;
             if (newIndex >= themes.length) newIndex = 0;
             applyTheme(newIndex);
         }
@@ -235,18 +286,60 @@
             applyTheme(idx);
         }
 
-        themeSwitch.addEventListener('click', nextTheme);
+        // --- Шрифты (5 популярных + Minecraft по умолчанию) ---
+        const fonts = [
+            { name: 'Minecraft', family: "'Minecraft', monospace" },
+            { name: 'Roboto', family: "'Roboto', sans-serif" },
+            { name: 'Open Sans', family: "'Open Sans', sans-serif" },
+            { name: 'Montserrat', family: "'Montserrat', sans-serif" },
+            { name: 'Arial', family: "Arial, sans-serif" },
+            { name: 'Helvetica', family: "Helvetica, sans-serif" }
+        ];
 
+        let currentFontIndex = 0; // начинаем с Minecraft
+
+        const fontSwitch = document.getElementById('fontSwitch');
+
+        function applyFont(index) {
+            const font = fonts[index];
+            document.body.style.fontFamily = font.family;
+            currentFontIndex = index;
+            localStorage.setItem('selectedFontIndex', index);
+            showToast(`Шрифт: ${font.name}`);
+        }
+
+        function nextFont() {
+            let newIndex = currentFontIndex + 1;
+            if (newIndex >= fonts.length) newIndex = 0;
+            applyFont(newIndex);
+        }
+
+        function loadSavedFont() {
+            const saved = localStorage.getItem('selectedFontIndex');
+            let idx = (saved !== null && !isNaN(parseInt(saved))) ? parseInt(saved) : 0;
+            if (idx < 0) idx = 0;
+            if (idx >= fonts.length) idx = fonts.length - 1;
+            applyFont(idx);
+        }
+
+        // --- Обработчики кликов ---
+        themeSwitch.addEventListener('click', nextTheme);
+        fontSwitch.addEventListener('click', nextFont);
+
+        // --- Демо-кнопка ---
         document.getElementById('demoBtn').addEventListener('click', () => {
-            const currentTheme = themes[currentIndex];
+            const currentTheme = themes[currentThemeIndex];
+            const currentFont = fonts[currentFontIndex];
             tg.showPopup({
-                title: '🎨 Текущая тема',
-                message: `Активна тема: "${currentTheme.name}"`,
+                title: '🎨 Настройки',
+                message: `Тема: "${currentTheme.name}"\nШрифт: "${currentFont.name}"`,
                 buttons: [{type: 'ok'}]
             });
         });
 
+        // --- Инициализация ---
         loadSavedTheme();
+        loadSavedFont();
     </script>
 </body>
 </html>
