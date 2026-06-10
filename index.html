@@ -3,177 +3,327 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Тёмное Mini App</title>
+    <title>Mini App — 5 тем</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        /* Принудительно тёмные цвета, игнорируем тему Telegram */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
         }
 
         body {
-            background-color: #0a0a0a;  /* глубокий чёрный фон */
-            color: #e0e0e0;             /* светлый текст, не слепящий */
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             padding: 20px;
+            min-height: 100vh;
         }
 
         .container {
-            max-width: 400px;
+            max-width: 450px;
             margin: 0 auto;
         }
 
-        /* Карточки — тёмно-серые, с лёгкой границей */
-        .card {
-            background-color: #1e1e1e;
-            border-radius: 20px;
+        /* Карточка с информацией */
+        .info-card {
+            border-radius: 24px;
             padding: 20px;
-            margin-bottom: 16px;
-            border: 1px solid #2c2c2c;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+            margin-bottom: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
-        /* Заголовки */
-        h2 {
-            color: #ffffff;
-            font-weight: 600;
-            margin-bottom: 12px;
+        /* Блок с текущей темой и солнцем */
+        .theme-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
         }
 
-        p {
-            color: #b0b0b0;
-            line-height: 1.4;
-        }
-
-        /* Блок с информацией о пользователе */
-        .user-info {
-            background-color: #121212;
-            border: 1px solid #2c2c2c;
-            border-radius: 16px;
-            padding: 16px;
-            margin: 16px 0;
+        .current-theme-label {
+            font-weight: 500;
             font-size: 14px;
-            color: #cccccc;
+            opacity: 0.8;
         }
 
-        .user-info strong {
-            color: #ffffff;
+        .sun-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255,255,255,0.1);
+            padding: 6px 12px;
+            border-radius: 40px;
         }
 
-        /* Кнопки */
-        button {
-            background-color: #2c2c2c;
-            border: none;
-            color: #ffffff;
-            padding: 12px 24px;
-            border-radius: 14px;
-            font-size: 16px;
+        .sun-circle {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: gold;
+            box-shadow: 0 0 6px currentColor;
+            transition: background 0.2s;
+        }
+
+        .sun-text {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* Сетка кнопок тем */
+        .themes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .theme-btn {
+            padding: 12px 8px;
+            border-radius: 60px;
             font-weight: 600;
-            width: 100%;
+            font-size: 14px;
             cursor: pointer;
-            margin-top: 8px;
-            transition: all 0.2s ease;
-            border: 1px solid #3a3a3a;
+            text-align: center;
+            transition: transform 0.1s, filter 0.2s;
+            background: transparent;
+            border-width: 2px;
+            border-style: solid;
         }
 
-        button:hover {
-            background-color: #3a3a3a;
-            transform: scale(0.98);
+        .theme-btn:active {
+            transform: scale(0.96);
         }
 
-        button:active {
-            background-color: #444444;
+        /* Дополнительный блок для демо */
+        .demo-block {
+            border-radius: 20px;
+            padding: 16px;
+            margin-top: 20px;
         }
 
-        /* Специальный стиль для акцентной кнопки (если нужна) */
-        .btn-primary {
-            background-color: #0d6efd;
-            border-color: #0d6efd;
+        button.demo-btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 12px;
         }
 
-        .btn-primary:hover {
-            background-color: #0b5ed7;
+        /* ---------- ТЕМЫ (переопределяются через класс на body) ---------- */
+        /* Светлая тема */
+        body.theme-light {
+            background-color: #f5f5f7;
+            color: #1c1c1e;
+        }
+        body.theme-light .info-card,
+        body.theme-light .demo-block {
+            background-color: #ffffff;
+            border: 1px solid #e9e9ef;
+        }
+        body.theme-light .theme-btn {
+            background: #ffffff;
+            border-color: #c6c6c8;
+            color: #1c1c1e;
+        }
+        body.theme-light .theme-btn:hover {
+            background: #e9e9ef;
+        }
+        body.theme-light .demo-btn {
+            background: #007aff;
+            color: white;
         }
 
-        /* Ссылки (если будут) */
-        a {
-            color: #66b0ff;
-            text-decoration: none;
+        /* Тёмная тема */
+        body.theme-dark {
+            background-color: #0a0a0a;
+            color: #e0e0e0;
+        }
+        body.theme-dark .info-card,
+        body.theme-dark .demo-block {
+            background-color: #1e1e1e;
+            border: 1px solid #2c2c2c;
+        }
+        body.theme-dark .theme-btn {
+            background: #1e1e1e;
+            border-color: #3a3a3a;
+            color: #e0e0e0;
+        }
+        body.theme-dark .theme-btn:hover {
+            background: #2c2c2c;
+        }
+        body.theme-dark .demo-btn {
+            background: #0d6efd;
+            color: white;
         }
 
-        a:hover {
-            text-decoration: underline;
+        /* Фиолетовая тема */
+        body.theme-purple {
+            background-color: #1a0b2e;
+            color: #e2d6ff;
+        }
+        body.theme-purple .info-card,
+        body.theme-purple .demo-block {
+            background-color: #2e1a47;
+            border: 1px solid #6b3fa0;
+        }
+        body.theme-purple .theme-btn {
+            background: #2e1a47;
+            border-color: #a57cf0;
+            color: #f0e6ff;
+        }
+        body.theme-purple .theme-btn:hover {
+            background: #4a2a6e;
+        }
+        body.theme-purple .demo-btn {
+            background: #9b59b6;
+            color: white;
+        }
+
+        /* Зелёная тема */
+        body.theme-green {
+            background-color: #0a2f1a;
+            color: #c8e6d9;
+        }
+        body.theme-green .info-card,
+        body.theme-green .demo-block {
+            background-color: #1b4d2b;
+            border: 1px solid #2e7d5e;
+        }
+        body.theme-green .theme-btn {
+            background: #1b4d2b;
+            border-color: #4caf7f;
+            color: #e0f5e8;
+        }
+        body.theme-green .theme-btn:hover {
+            background: #2e6b3e;
+        }
+        body.theme-green .demo-btn {
+            background: #2ecc71;
+            color: #0a2f1a;
+        }
+
+        /* Красная тема */
+        body.theme-red {
+            background-color: #2b0a0a;
+            color: #ffcfcf;
+        }
+        body.theme-red .info-card,
+        body.theme-red .demo-block {
+            background-color: #4a1a1a;
+            border: 1px solid #b53b3b;
+        }
+        body.theme-red .theme-btn {
+            background: #4a1a1a;
+            border-color: #e67373;
+            color: #ffdddd;
+        }
+        body.theme-red .theme-btn:hover {
+            background: #6e2c2c;
+        }
+        body.theme-red .demo-btn {
+            background: #e74c3c;
+            color: white;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="card">
-            <h2>🌙 Тёмный режим</h2>
-            <p>Это мини-приложение всегда выглядит тёмным — независимо от темы Telegram.</p>
+        <!-- карточка с информацией и "солнцем" -->
+        <div class="info-card">
+            <div class="theme-header">
+                <div class="current-theme-label">🎨 Текущая тема</div>
+                <div class="sun-indicator" id="sunIndicator">
+                    <div class="sun-circle" id="sunCircle"></div>
+                    <span class="sun-text" id="sunText">солнце</span>
+                </div>
+            </div>
+            <p style="margin-bottom: 8px;">Выберите тему оформления:</p>
+            <div class="themes-grid" id="themeButtonsContainer">
+                <!-- кнопки будут вставлены динамически, но можно и статикой -->
+            </div>
         </div>
 
-        <div class="user-info" id="userInfo">
-            Загрузка данных...
+        <!-- демо-блок для наглядности -->
+        <div class="demo-block">
+            <p style="margin-bottom: 12px;">✨ Пример контента</p>
+            <p>Этот блок и кнопка ниже меняют цвета вместе с темой.</p>
+            <button class="demo-btn" id="demoActionBtn">Нажми меня</button>
         </div>
-
-        <button id="closeBtn">Закрыть</button>
-        <button id="sendDataBtn">Отправить данные боту</button>
     </div>
 
     <script>
+        // 1. Инициализация Telegram WebApp
         const tg = window.Telegram.WebApp;
+        tg.expand(); // растянуть на весь экран
+        // убираем основную кнопку, если не нужна (можно оставить)
+        tg.MainButton.hide();
 
-        // Растягиваем на весь экран
-        tg.expand();
+        // 2. Определение тем: название, цвет обводки (для кнопок), цвет солнца
+        const themes = [
+            { id: 'light', name: 'Светлая', borderColor: '#c6c6c8', sunColor: '#f39c12' },
+            { id: 'dark',  name: 'Тёмная',  borderColor: '#3a3a3a', sunColor: '#f1c40f' },
+            { id: 'purple',name: 'Фиолетовая', borderColor: '#a57cf0', sunColor: '#d58eff' },
+            { id: 'green', name: 'Зелёная', borderColor: '#4caf7f', sunColor: '#7bed9f' },
+            { id: 'red',   name: 'Красная', borderColor: '#e67373', sunColor: '#ff7e67' }
+        ];
 
-        // Принудительно устанавливаем цвет фона и шапки в Telegram (опционально)
-        tg.setBackgroundColor("#0a0a0a");
-        tg.setHeaderColor("#0a0a0a");
+        // 3. Функция применения темы
+        function setTheme(themeId) {
+            // убираем все классы тем
+            const body = document.body;
+            themes.forEach(t => body.classList.remove(`theme-${t.id}`));
+            body.classList.add(`theme-${themeId}`);
+            // обновляем индикатор солнца
+            const theme = themes.find(t => t.id === themeId);
+            if (theme) {
+                const sunCircle = document.getElementById('sunCircle');
+                const sunText = document.getElementById('sunText');
+                sunCircle.style.backgroundColor = theme.sunColor;
+                sunCircle.style.boxShadow = `0 0 6px ${theme.sunColor}`;
+                sunText.textContent = theme.name;
+            }
+            // сохраняем тему в localStorage
+            localStorage.setItem('selectedTheme', themeId);
+        }
 
-        // Настройка основной кнопки (внизу экрана)
-        tg.MainButton.setText("Готово");
-        tg.MainButton.show();
-        tg.MainButton.onClick(() => {
+        // 4. Загружаем сохранённую тему или 'dark' по умолчанию
+        const savedTheme = localStorage.getItem('selectedTheme');
+        const defaultTheme = savedTheme && themes.find(t => t.id === savedTheme) ? savedTheme : 'dark';
+        setTheme(defaultTheme);
+
+        // 5. Генерация кнопок с обводкой нужного цвета (чтобы каждая кнопка имела свою рамку)
+        const container = document.getElementById('themeButtonsContainer');
+        themes.forEach(theme => {
+            const btn = document.createElement('button');
+            btn.textContent = theme.name;
+            btn.classList.add('theme-btn');
+            // задаём обводку в соответствии с темой (даже когда другая тема активна, обводка остаётся цветовой меткой)
+            btn.style.borderColor = theme.borderColor;
+            btn.style.borderWidth = '2px';
+            btn.style.borderStyle = 'solid';
+            // при клике переключаем тему
+            btn.addEventListener('click', () => setTheme(theme.id));
+            container.appendChild(btn);
+        });
+
+        // 6. Дополнительная кнопка демо (просто алерт, но можно связать с Telegram)
+        document.getElementById('demoActionBtn').addEventListener('click', () => {
+            const currentTheme = document.body.className.match(/theme-(\w+)/)?.[1] || 'dark';
             tg.showPopup({
-                title: "Уведомление",
-                message: "Вы нажали основную кнопку",
+                title: "Действие",
+                message: `Ты нажал кнопку в теме "${themes.find(t=>t.id===currentTheme)?.name}".\nПриложение может делать что угодно!`,
                 buttons: [{type: "ok"}]
             });
         });
 
-        // Получаем данные пользователя
-        const user = tg.initDataUnsafe?.user;
-
-        if (user) {
-            document.getElementById('userInfo').innerHTML = `
-                <strong>👤 Пользователь Telegram</strong><br>
-                🆔 ID: ${user.id}<br>
-                👋 Имя: ${user.first_name} ${user.last_name || ''}<br>
-                @${user.username || 'нет username'}<br>
-                🌐 Язык: ${user.language_code || 'не указан'}
-            `;
-        } else {
-            document.getElementById('userInfo').innerHTML = `
-                ℹ️ Тестовый режим (вне Telegram)
-            `;
-        }
-
-        // Закрыть приложение
-        document.getElementById('closeBtn').addEventListener('click', () => {
-            tg.close();
-        });
-
-        // Отправить данные боту
-        document.getElementById('sendDataBtn').addEventListener('click', () => {
-            tg.sendData(JSON.stringify({
-                action: 'button_clicked',
-                timestamp: Date.now(),
-                userId: user?.id || null
-            }));
-        });
+        // 7. Для удобства: если в Telegram есть возможность закрыть приложение через системную кнопку, добавим обработку кнопки "назад"?
+        // Просто покажем, как можно закрыть через sendData (опционально)
+        // Вешаем слушатель на закрытие страницы, если нужно — ничего не делаем.
     </script>
 </body>
 </html>
