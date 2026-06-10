@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Mini App — Табы + Пиксель</title>
+    <title>Mini App — Профиль + Настройки</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * {
@@ -15,51 +15,8 @@
         }
 
         body {
-            padding: 20px 20px 70px 20px; /* чуть меньше отступ снизу */
+            padding: 20px 20px 70px 20px;
             min-height: 100vh;
-        }
-
-        /* Кнопка смены темы (правый верхний угол) */
-        .theme-switch {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            z-index: 1000;
-            border: 2px solid rgba(255,255,255,0.2);
-            transition: transform 0.1s, box-shadow 0.2s;
-        }
-        .theme-switch:active {
-            transform: scale(0.94);
-        }
-
-        /* Кнопка смены языка (левый верхний угол) */
-        .lang-switch {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            cursor: pointer;
-            background: #2c2c2c;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 16px;
-            color: white;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            z-index: 1000;
-            border: 2px solid rgba(255,255,255,0.2);
-            transition: transform 0.1s, box-shadow 0.2s;
-        }
-        .lang-switch:active {
-            transform: scale(0.94);
         }
 
         /* Тост */
@@ -81,11 +38,9 @@
             transition: opacity 0.25s ease;
             white-space: nowrap;
         }
-        .toast.show {
-            opacity: 1;
-        }
+        .toast.show { opacity: 1; }
 
-        /* Нижний таб-бар — приподнятый, с закруглениями и тенью */
+        /* Нижний таб-бар (приподнятый) */
         .tab-bar {
             position: fixed;
             bottom: 12px;
@@ -100,7 +55,6 @@
             padding: 8px 12px;
             z-index: 1002;
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            transition: all 0.2s;
         }
         .tab-item {
             flex: 1;
@@ -109,50 +63,34 @@
             cursor: pointer;
             border-radius: 40px;
             transition: 0.15s;
-            font-weight: 600;
-            font-size: 14px;
             color: #aaa;
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 4px;
         }
-        .tab-item .tab-icon {
-            font-size: 24px;
-        }
-        .tab-item .tab-label {
-            font-size: 12px;
-        }
+        .tab-item .tab-icon { font-size: 24px; }
+        .tab-item .tab-label { font-size: 12px; }
         .tab-item.active {
             background: rgba(255,255,255,0.2);
             color: #fff;
             transform: translateY(-2px);
         }
-        /* Светлая тема для таб-бара */
         body.theme-light .tab-bar {
             background: rgba(245,245,247,0.95);
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
-        body.theme-light .tab-item {
-            color: #555;
-        }
+        body.theme-light .tab-item { color: #555; }
         body.theme-light .tab-item.active {
             background: rgba(0,0,0,0.1);
             color: #000;
         }
 
         /* Страницы */
-        .page {
-            display: none;
-        }
-        .page.active {
-            display: block;
-        }
+        .page { display: none; }
+        .page.active { display: block; }
 
-        .container {
-            max-width: 450px;
-            margin: 0 auto;
-        }
+        .container { max-width: 450px; margin: 0 auto; }
 
         .card {
             border-radius: 28px;
@@ -177,6 +115,7 @@
             display: flex;
             justify-content: center;
             margin-bottom: 20px;
+            position: relative;
         }
         .avatar {
             width: 100px;
@@ -210,7 +149,7 @@
             font-weight: bold;
             margin-bottom: 6px;
         }
-        .profile-field input, .profile-field textarea {
+        .profile-field textarea {
             width: 100%;
             padding: 10px;
             border-radius: 16px;
@@ -219,8 +158,85 @@
             font-size: 14px;
             resize: vertical;
         }
-        .file-input {
-            margin: 10px 0;
+        /* Кнопка-шестерёнка в карточке анкеты */
+        .settings-icon {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 28px;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: 0.1s;
+        }
+        .settings-icon:active { transform: scale(0.9); }
+
+        /* Модальное окно настроек */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-content {
+            max-width: 320px;
+            width: 80%;
+            background: #1e1e1e;
+            border-radius: 32px;
+            padding: 24px;
+            text-align: center;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+        }
+        body.theme-light .modal-content {
+            background: #ffffff;
+        }
+        .modal-content h3 {
+            margin-bottom: 16px;
+        }
+        .theme-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin: 16px 0;
+        }
+        .theme-dot {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid rgba(255,255,255,0.3);
+            transition: 0.1s;
+        }
+        .theme-dot:active { transform: scale(0.9); }
+        .lang-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin: 16px 0;
+        }
+        .lang-btn {
+            padding: 8px 20px;
+            border-radius: 40px;
+            cursor: pointer;
+            background: #333;
+            color: white;
+            border: none;
+        }
+        .avatar-settings {
+            margin: 16px 0;
+        }
+        .close-modal {
+            margin-top: 16px;
+            background: #555;
         }
 
         /* Чаты: красивая заглушка */
@@ -229,12 +245,9 @@
             padding: 40px 20px;
             opacity: 0.7;
         }
-        .chats-placeholder .icon {
-            font-size: 64px;
-            margin-bottom: 16px;
-        }
+        .chats-placeholder .icon { font-size: 64px; margin-bottom: 16px; }
 
-        /* Поддержка: форма */
+        /* Поддержка */
         .support-input, .support-textarea {
             width: 100%;
             padding: 12px;
@@ -242,10 +255,9 @@
             border: 1px solid #aaa;
             margin-bottom: 16px;
             background: rgba(255,255,255,0.1);
-            font-size: 14px;
         }
 
-        /* ----- ТЕМЫ (общие для всех страниц) ----- */
+        /* ----- ТЕМЫ (общие) ----- */
         body.theme-light {
             background: #f5f5f7;
             color: #1c1c1e;
@@ -258,7 +270,7 @@
             background: #007aff;
             color: white;
         }
-        body.theme-light input, body.theme-light textarea {
+        body.theme-light textarea {
             background: #f0f0f2;
             color: #1c1c1e;
             border-color: #ccc;
@@ -276,7 +288,7 @@
             background: #0d6efd;
             color: white;
         }
-        body.theme-dark input, body.theme-dark textarea {
+        body.theme-dark textarea {
             background: #2a2a2a;
             color: #e0e0e0;
             border-color: #444;
@@ -294,7 +306,7 @@
             background: #9b59b6;
             color: white;
         }
-        body.theme-purple input, body.theme-purple textarea {
+        body.theme-purple textarea {
             background: #3a235a;
             color: #e2d6ff;
             border-color: #7a4fa0;
@@ -312,7 +324,7 @@
             background: #2ecc71;
             color: #0a2a16;
         }
-        body.theme-green input, body.theme-green textarea {
+        body.theme-green textarea {
             background: #1e5a36;
             color: #c8f0dc;
             border-color: #3a8a5a;
@@ -330,7 +342,7 @@
             background: #e74c3c;
             color: white;
         }
-        body.theme-red input, body.theme-red textarea {
+        body.theme-red textarea {
             background: #5e2a2a;
             color: #ffd6d6;
             border-color: #b55a5a;
@@ -348,7 +360,7 @@
             background: #3b82f6;
             color: white;
         }
-        body.theme-blue input, body.theme-blue textarea {
+        body.theme-blue textarea {
             background: #1e3a6e;
             color: #cfe3ff;
             border-color: #5a8ac0;
@@ -356,8 +368,6 @@
     </style>
 </head>
 <body>
-    <div class="lang-switch" id="langSwitch">RU</div>
-    <div class="theme-switch" id="themeSwitch"></div>
     <div class="toast" id="toast"></div>
 
     <!-- Вкладка: Чаты -->
@@ -376,20 +386,16 @@
     <!-- Вкладка: Анкета (профиль) -->
     <div id="profilePage" class="page">
         <div class="container">
-            <div class="card">
+            <div class="card" style="position: relative;">
+                <div class="settings-icon" id="settingsIcon">⚙️</div>
                 <div class="avatar-container" id="avatarContainer"></div>
                 <div class="profile-info">
-                    <p><strong id="labelTgId">Telegram ID:</strong> <span id="tgId">—</span></p>
                     <p><strong id="labelUsername">Username:</strong> <span id="tgUsername">—</span></p>
                     <p><strong id="labelFirstName">Имя:</strong> <span id="tgFirstName">—</span></p>
                 </div>
                 <div class="profile-field">
                     <label id="labelBio">✏️ Описание профиля</label>
                     <textarea id="bioInput" rows="3" placeholder="Расскажите о себе..."></textarea>
-                </div>
-                <div class="profile-field">
-                    <label id="labelAvatar">🖼️ Загрузить аватар</label>
-                    <input type="file" id="avatarInput" accept="image/*" class="file-input">
                 </div>
             </div>
         </div>
@@ -423,6 +429,23 @@
         </div>
     </div>
 
+    <!-- Модальное окно настроек (тема + язык + загрузка аватара) -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <h3>⚙️ Настройки</h3>
+            <div class="theme-buttons" id="themeButtons"></div>
+            <div class="lang-buttons">
+                <button class="lang-btn" data-lang="ru">🇷🇺 Русский</button>
+                <button class="lang-btn" data-lang="en">🇬🇧 English</button>
+            </div>
+            <div class="avatar-settings">
+                <label>🖼️ Аватар профиля</label>
+                <input type="file" id="modalAvatarInput" accept="image/*" style="margin-top: 8px;">
+            </div>
+            <button class="btn close-modal" id="closeModalBtn">Закрыть</button>
+        </div>
+    </div>
+
     <script>
         // --- Telegram WebApp и данные пользователя ---
         const tg = window.Telegram.WebApp;
@@ -446,17 +469,13 @@
             Object.values(pages).forEach(page => page.classList.remove('active'));
             pages[tabId].classList.add('active');
             document.querySelectorAll('.tab-item').forEach(item => {
-                if (item.dataset.tab === tabId) {
-                    item.classList.add('active');
-                } else {
-                    item.classList.remove('active');
-                }
+                if (item.dataset.tab === tabId) item.classList.add('active');
+                else item.classList.remove('active');
             });
             currentTab = tabId;
             localStorage.setItem('lastTab', tabId);
             if (tabId === 'profile') renderAvatar();
         }
-
         document.querySelectorAll('.tab-item').forEach(item => {
             item.addEventListener('click', () => showTab(item.dataset.tab));
         });
@@ -476,10 +495,9 @@
             }, 1500);
         }
 
-        // --- Языки и переводы (убрали задачи) ---
+        // --- Языки и переводы (без ID) ---
         const translations = {
             ru: {
-                langName: 'Русский',
                 tabChats: 'Чаты',
                 tabProfile: 'Анкета',
                 tabSupport: 'Поддержка',
@@ -490,15 +508,15 @@
                 supportMessagePlaceholder: 'Сообщение',
                 supportSendBtn: 'Отправить',
                 supportSent: 'Сообщение отправлено (демо)',
-                labelTgId: 'Telegram ID:',
                 labelUsername: 'Username:',
                 labelFirstName: 'Имя:',
                 labelBio: '✏️ Описание профиля',
-                labelAvatar: '🖼️ Загрузить аватар',
-                bioPlaceholder: 'Расскажите о себе...'
+                bioPlaceholder: 'Расскажите о себе...',
+                toastThemeChanged: 'Тема: ',
+                toastLangChanged: 'Язык: ',
+                toastAvatarUpdated: 'Аватар обновлён'
             },
             en: {
-                langName: 'English',
                 tabChats: 'Chats',
                 tabProfile: 'Profile',
                 tabSupport: 'Support',
@@ -509,17 +527,17 @@
                 supportMessagePlaceholder: 'Message',
                 supportSendBtn: 'Send',
                 supportSent: 'Message sent (demo)',
-                labelTgId: 'Telegram ID:',
                 labelUsername: 'Username:',
                 labelFirstName: 'Name:',
                 labelBio: '✏️ Profile bio',
-                labelAvatar: '🖼️ Upload avatar',
-                bioPlaceholder: 'Tell about yourself...'
+                bioPlaceholder: 'Tell about yourself...',
+                toastThemeChanged: 'Theme: ',
+                toastLangChanged: 'Language: ',
+                toastAvatarUpdated: 'Avatar updated'
             }
         };
 
         let currentLang = localStorage.getItem('selectedLang') || 'ru';
-
         function applyLanguage(lang) {
             const t = translations[lang];
             if (!t) return;
@@ -532,25 +550,16 @@
             document.getElementById('supportSubject').placeholder = t.supportSubjectPlaceholder;
             document.getElementById('supportMessage').placeholder = t.supportMessagePlaceholder;
             document.getElementById('sendSupportBtn').innerText = t.supportSendBtn;
-            document.getElementById('labelTgId').innerHTML = t.labelTgId;
             document.getElementById('labelUsername').innerHTML = t.labelUsername;
             document.getElementById('labelFirstName').innerHTML = t.labelFirstName;
             document.getElementById('labelBio').innerHTML = t.labelBio;
-            document.getElementById('labelAvatar').innerHTML = t.labelAvatar;
             document.getElementById('bioInput').placeholder = t.bioPlaceholder;
-            langSwitch.innerText = lang === 'ru' ? 'RU' : 'EN';
             localStorage.setItem('selectedLang', lang);
             currentLang = lang;
             showToast(t.langName);
         }
 
-        function toggleLanguage() {
-            const newLang = currentLang === 'ru' ? 'en' : 'ru';
-            applyLanguage(newLang);
-        }
-        document.getElementById('langSwitch').addEventListener('click', toggleLanguage);
-
-        // --- Темы (прежние) ---
+        // --- Темы (6 цветов) ---
         const themes = [
             { id: 'light',  name: 'Светлая',  color: '#f1c40f' },
             { id: 'dark',   name: 'Тёмная',   color: '#f9e45b' },
@@ -559,22 +568,16 @@
             { id: 'red',    name: 'Красная',  color: '#ff8a7a' },
             { id: 'blue',   name: 'Синяя',    color: '#6aa9ff' }
         ];
-        let currentThemeIndex = 1;
-        const themeSwitch = document.getElementById('themeSwitch');
+        let currentThemeIndex = 1; // тёмная по умолчанию
 
         function applyTheme(index) {
             const theme = themes[index];
             document.body.classList.remove(...themes.map(t => `theme-${t.id}`));
             document.body.classList.add(`theme-${theme.id}`);
-            themeSwitch.style.backgroundColor = theme.color;
-            themeSwitch.style.boxShadow = `0 0 6px ${theme.color}`;
             currentThemeIndex = index;
             localStorage.setItem('selectedThemeIndex', index);
             const t = translations[currentLang];
             showToast((t.toastThemeChanged || 'Тема: ') + theme.name);
-        }
-        function nextTheme() {
-            applyTheme((currentThemeIndex + 1) % themes.length);
         }
         function loadSavedTheme() {
             const saved = localStorage.getItem('selectedThemeIndex');
@@ -582,66 +585,112 @@
             idx = Math.min(Math.max(0, idx), themes.length - 1);
             applyTheme(idx);
         }
-        themeSwitch.addEventListener('click', nextTheme);
 
-        // --- Профиль (аватар, описание) ---
-        const bioInput = document.getElementById('bioInput');
-        const avatarContainer = document.getElementById('avatarContainer');
-        const avatarInput = document.getElementById('avatarInput');
+        // --- Аватар (загружается через настройки) ---
         let currentAvatarBase64 = localStorage.getItem('userAvatar') || null;
-
         function renderAvatar() {
-            avatarContainer.innerHTML = '';
+            const container = document.getElementById('avatarContainer');
+            if (!container) return;
+            container.innerHTML = '';
             if (currentAvatarBase64) {
                 const img = document.createElement('img');
                 img.src = currentAvatarBase64;
                 img.className = 'avatar';
                 img.alt = 'avatar';
-                avatarContainer.appendChild(img);
+                container.appendChild(img);
             } else {
                 const placeholder = document.createElement('div');
                 placeholder.className = 'avatar-placeholder';
                 const firstLetter = (user.first_name ? user.first_name.charAt(0) : '?').toUpperCase();
                 placeholder.textContent = firstLetter;
-                avatarContainer.appendChild(placeholder);
+                container.appendChild(placeholder);
             }
         }
         function saveAvatar(base64) {
             currentAvatarBase64 = base64;
             localStorage.setItem('userAvatar', base64 || '');
             renderAvatar();
-            showToast(translations[currentLang].labelAvatar.split(' ')[0] || 'Avatar updated');
+            const t = translations[currentLang];
+            showToast(t.toastAvatarUpdated || 'Аватар обновлён');
         }
-        avatarInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file && file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onload = (ev) => saveAvatar(ev.target.result);
-                reader.readAsDataURL(file);
-            } else {
-                showToast(translations[currentLang].bioPlaceholder === 'Расскажите о себе...' ? 'Выберите изображение' : 'Select an image');
-            }
-        });
+
+        // --- Профиль: описание ---
+        const bioInput = document.getElementById('bioInput');
         let userBio = localStorage.getItem('userBio') || '';
         bioInput.value = userBio;
         bioInput.addEventListener('input', () => {
             userBio = bioInput.value;
             localStorage.setItem('userBio', userBio);
         });
-
-        document.getElementById('tgId').textContent = user.id;
+        // Данные пользователя (без ID)
         document.getElementById('tgUsername').textContent = user.username || '—';
         document.getElementById('tgFirstName').textContent = `${user.first_name || ''} ${user.last_name || ''}`.trim() || '—';
 
-        // --- Поддержка: демо-отправка ---
+        // --- Модальное окно настроек ---
+        const modal = document.getElementById('settingsModal');
+        const settingsIcon = document.getElementById('settingsIcon');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const themeButtonsContainer = document.getElementById('themeButtons');
+        const modalAvatarInput = document.getElementById('modalAvatarInput');
+
+        function openModal() {
+            modal.classList.add('active');
+            // генерация кнопок тем внутри модалки
+            themeButtonsContainer.innerHTML = '';
+            themes.forEach((theme, idx) => {
+                const dot = document.createElement('div');
+                dot.className = 'theme-dot';
+                dot.style.backgroundColor = theme.color;
+                dot.style.border = idx === currentThemeIndex ? '3px solid white' : '2px solid rgba(255,255,255,0.3)';
+                dot.addEventListener('click', () => {
+                    applyTheme(idx);
+                    // обновить обводку активной темы
+                    document.querySelectorAll('.theme-dot').forEach(d => d.style.border = '2px solid rgba(255,255,255,0.3)');
+                    dot.style.border = '3px solid white';
+                });
+                themeButtonsContainer.appendChild(dot);
+            });
+        }
+        function closeModal() {
+            modal.classList.remove('active');
+        }
+        settingsIcon.addEventListener('click', openModal);
+        closeModalBtn.addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+        // Переключение языка в модалке
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const lang = btn.dataset.lang;
+                applyLanguage(lang);
+                // не закрываем модалку
+            });
+        });
+        // Загрузка аватара через модалку
+        modalAvatarInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    saveAvatar(ev.target.result);
+                };
+                reader.readAsDataURL(file);
+            } else {
+                showToast('Выберите изображение');
+            }
+        });
+
+        // --- Поддержка: отправка ---
         document.getElementById('sendSupportBtn').addEventListener('click', () => {
             const subject = document.getElementById('supportSubject').value;
             const message = document.getElementById('supportMessage').value;
+            const t = translations[currentLang];
             if (!subject.trim() || !message.trim()) {
-                showToast(translations[currentLang].supportSubjectPlaceholder === 'Тема' ? 'Заполните тему и сообщение' : 'Fill subject and message');
+                showToast(t.supportSubjectPlaceholder === 'Тема' ? 'Заполните тему и сообщение' : 'Fill subject and message');
                 return;
             }
-            showToast(translations[currentLang].supportSent);
+            showToast(t.supportSent);
             document.getElementById('supportSubject').value = '';
             document.getElementById('supportMessage').value = '';
         });
