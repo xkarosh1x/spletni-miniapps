@@ -40,7 +40,7 @@
         }
         .toast.show { opacity: 1; }
 
-        /* Нижний таб-бар (приподнятый) */
+        /* Нижний таб-бар */
         .tab-bar {
             position: fixed;
             bottom: 12px;
@@ -158,17 +158,22 @@
             font-size: 14px;
             resize: vertical;
         }
-        /* Кнопка-шестерёнка в карточке анкеты */
+        /* Кнопка-шестерёнка — увеличенная область клика */
         .settings-icon {
             position: absolute;
-            top: 20px;
-            right: 20px;
+            top: 12px;
+            right: 12px;
             font-size: 28px;
             cursor: pointer;
-            opacity: 0.7;
+            opacity: 0.8;
             transition: 0.1s;
+            padding: 8px;
+            margin: -8px;
+            border-radius: 50%;
+            background: transparent;
+            line-height: 1;
         }
-        .settings-icon:active { transform: scale(0.9); }
+        .settings-icon:active { transform: scale(0.9); background: rgba(0,0,0,0.1); }
 
         /* Модальное окно настроек */
         .modal {
@@ -230,6 +235,7 @@
             background: #333;
             color: white;
             border: none;
+            font-weight: bold;
         }
         .avatar-settings {
             margin: 16px 0;
@@ -239,7 +245,7 @@
             background: #555;
         }
 
-        /* Чаты: красивая заглушка */
+        /* Чаты: заглушка */
         .chats-placeholder {
             text-align: center;
             padding: 40px 20px;
@@ -429,17 +435,17 @@
         </div>
     </div>
 
-    <!-- Модальное окно настроек (тема + язык + загрузка аватара) -->
+    <!-- Модальное окно настроек -->
     <div id="settingsModal" class="modal">
         <div class="modal-content">
-            <h3>⚙️ Настройки</h3>
+            <h3 id="modalTitle">⚙️ Настройки</h3>
             <div class="theme-buttons" id="themeButtons"></div>
             <div class="lang-buttons">
                 <button class="lang-btn" data-lang="ru">🇷🇺 Русский</button>
                 <button class="lang-btn" data-lang="en">🇬🇧 English</button>
             </div>
             <div class="avatar-settings">
-                <label>🖼️ Аватар профиля</label>
+                <label id="modalAvatarLabel">🖼️ Аватар профиля</label>
                 <input type="file" id="modalAvatarInput" accept="image/*" style="margin-top: 8px;">
             </div>
             <button class="btn close-modal" id="closeModalBtn">Закрыть</button>
@@ -447,7 +453,6 @@
     </div>
 
     <script>
-        // --- Telegram WebApp и данные пользователя ---
         const tg = window.Telegram.WebApp;
         tg.expand();
         tg.MainButton.hide();
@@ -457,7 +462,7 @@
             user = { id: 123456, first_name: "Игрок", last_name: "", username: "pixel_player" };
         }
 
-        // --- Элементы табов ---
+        // --- Табы ---
         const pages = {
             chats: document.getElementById('chatsPage'),
             profile: document.getElementById('profilePage'),
@@ -495,9 +500,10 @@
             }, 1500);
         }
 
-        // --- Языки и переводы (без ID) ---
+        // --- Переводы с добавленным langName и modalTitle ---
         const translations = {
             ru: {
+                langName: 'Русский',
                 tabChats: 'Чаты',
                 tabProfile: 'Анкета',
                 tabSupport: 'Поддержка',
@@ -512,11 +518,14 @@
                 labelFirstName: 'Имя:',
                 labelBio: '✏️ Описание профиля',
                 bioPlaceholder: 'Расскажите о себе...',
+                modalTitle: '⚙️ Настройки',
+                modalAvatarLabel: '🖼️ Аватар профиля',
                 toastThemeChanged: 'Тема: ',
                 toastLangChanged: 'Язык: ',
                 toastAvatarUpdated: 'Аватар обновлён'
             },
             en: {
+                langName: 'English',
                 tabChats: 'Chats',
                 tabProfile: 'Profile',
                 tabSupport: 'Support',
@@ -531,6 +540,8 @@
                 labelFirstName: 'Name:',
                 labelBio: '✏️ Profile bio',
                 bioPlaceholder: 'Tell about yourself...',
+                modalTitle: '⚙️ Settings',
+                modalAvatarLabel: '🖼️ Profile avatar',
                 toastThemeChanged: 'Theme: ',
                 toastLangChanged: 'Language: ',
                 toastAvatarUpdated: 'Avatar updated'
@@ -554,21 +565,26 @@
             document.getElementById('labelFirstName').innerHTML = t.labelFirstName;
             document.getElementById('labelBio').innerHTML = t.labelBio;
             document.getElementById('bioInput').placeholder = t.bioPlaceholder;
+            // Обновляем тексты в модалке, если она открыта или не открыта
+            const modalTitle = document.getElementById('modalTitle');
+            if (modalTitle) modalTitle.innerText = t.modalTitle;
+            const modalAvatarLabel = document.getElementById('modalAvatarLabel');
+            if (modalAvatarLabel) modalAvatarLabel.innerText = t.modalAvatarLabel;
             localStorage.setItem('selectedLang', lang);
             currentLang = lang;
             showToast(t.langName);
         }
 
-        // --- Темы (6 цветов) ---
+        // --- Темы (цвет тёмной темы исправлен на серый) ---
         const themes = [
             { id: 'light',  name: 'Светлая',  color: '#f1c40f' },
-            { id: 'dark',   name: 'Тёмная',   color: '#f9e45b' },
+            { id: 'dark',   name: 'Тёмная',   color: '#9ca3af' },      // исправлено: серый вместо жёлтого
             { id: 'purple', name: 'Фиолетовая', color: '#cd9eff' },
             { id: 'green',  name: 'Зелёная',  color: '#7bed9f' },
             { id: 'red',    name: 'Красная',  color: '#ff8a7a' },
             { id: 'blue',   name: 'Синяя',    color: '#6aa9ff' }
         ];
-        let currentThemeIndex = 1; // тёмная по умолчанию
+        let currentThemeIndex = 1;
 
         function applyTheme(index) {
             const theme = themes[index];
@@ -586,7 +602,7 @@
             applyTheme(idx);
         }
 
-        // --- Аватар (загружается через настройки) ---
+        // --- Аватар ---
         let currentAvatarBase64 = localStorage.getItem('userAvatar') || null;
         function renderAvatar() {
             const container = document.getElementById('avatarContainer');
@@ -611,7 +627,7 @@
             localStorage.setItem('userAvatar', base64 || '');
             renderAvatar();
             const t = translations[currentLang];
-            showToast(t.toastAvatarUpdated || 'Аватар обновлён');
+            showToast(t.toastAvatarUpdated);
         }
 
         // --- Профиль: описание ---
@@ -622,7 +638,6 @@
             userBio = bioInput.value;
             localStorage.setItem('userBio', userBio);
         });
-        // Данные пользователя (без ID)
         document.getElementById('tgUsername').textContent = user.username || '—';
         document.getElementById('tgFirstName').textContent = `${user.first_name || ''} ${user.last_name || ''}`.trim() || '—';
 
@@ -635,7 +650,7 @@
 
         function openModal() {
             modal.classList.add('active');
-            // генерация кнопок тем внутри модалки
+            // Обновляем кнопки тем
             themeButtonsContainer.innerHTML = '';
             themes.forEach((theme, idx) => {
                 const dot = document.createElement('div');
@@ -644,7 +659,7 @@
                 dot.style.border = idx === currentThemeIndex ? '3px solid white' : '2px solid rgba(255,255,255,0.3)';
                 dot.addEventListener('click', () => {
                     applyTheme(idx);
-                    // обновить обводку активной темы
+                    // обновить обводку
                     document.querySelectorAll('.theme-dot').forEach(d => d.style.border = '2px solid rgba(255,255,255,0.3)');
                     dot.style.border = '3px solid white';
                 });
@@ -659,14 +674,16 @@
         modal.addEventListener('click', (e) => {
             if (e.target === modal) closeModal();
         });
+
         // Переключение языка в модалке
         document.querySelectorAll('.lang-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const lang = btn.dataset.lang;
                 applyLanguage(lang);
-                // не закрываем модалку
+                // Не закрываем модалку, чтобы продолжить настройку
             });
         });
+
         // Загрузка аватара через модалку
         modalAvatarInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
@@ -677,7 +694,8 @@
                 };
                 reader.readAsDataURL(file);
             } else {
-                showToast('Выберите изображение');
+                const t = translations[currentLang];
+                showToast(t.bioPlaceholder === 'Расскажите о себе...' ? 'Выберите изображение' : 'Select an image');
             }
         });
 
