@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Mini App — Вкладки + Пиксель</title>
+    <title>Mini App — Табы + Пиксель</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * {
@@ -15,7 +15,7 @@
         }
 
         body {
-            padding: 20px 20px 80px 20px; /* отступ снизу под таб-бар */
+            padding: 20px 20px 70px 20px; /* чуть меньше отступ снизу */
             min-height: 100vh;
         }
 
@@ -85,20 +85,22 @@
             opacity: 1;
         }
 
-        /* Нижний таб-бар */
+        /* Нижний таб-бар — приподнятый, с закруглениями и тенью */
         .tab-bar {
             position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
+            bottom: 12px;
+            left: 16px;
+            right: 16px;
             display: flex;
             justify-content: space-around;
             align-items: center;
-            background: rgba(30,30,30,0.95);
-            backdrop-filter: blur(10px);
-            border-top: 1px solid rgba(255,255,255,0.1);
-            padding: 8px 16px;
+            background: rgba(30,30,30,0.9);
+            backdrop-filter: blur(12px);
+            border-radius: 40px;
+            padding: 8px 12px;
             z-index: 1002;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transition: all 0.2s;
         }
         .tab-item {
             flex: 1;
@@ -106,18 +108,30 @@
             padding: 8px 0;
             cursor: pointer;
             border-radius: 40px;
-            transition: 0.1s;
+            transition: 0.15s;
             font-weight: 600;
             font-size: 14px;
             color: #aaa;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+        .tab-item .tab-icon {
+            font-size: 24px;
+        }
+        .tab-item .tab-label {
+            font-size: 12px;
         }
         .tab-item.active {
-            background: rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.2);
             color: #fff;
+            transform: translateY(-2px);
         }
+        /* Светлая тема для таб-бара */
         body.theme-light .tab-bar {
             background: rgba(245,245,247,0.95);
-            border-top-color: rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
         body.theme-light .tab-item {
             color: #555;
@@ -127,7 +141,7 @@
             color: #000;
         }
 
-        /* Страницы (вкладки) */
+        /* Страницы */
         .page {
             display: none;
         }
@@ -209,27 +223,26 @@
             margin: 10px 0;
         }
 
-        /* Задачи: чекбоксы */
-        .task-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 12px;
+        /* Чаты: красивая заглушка */
+        .chats-placeholder {
+            text-align: center;
+            padding: 40px 20px;
+            opacity: 0.7;
         }
-        .task-item input {
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
+        .chats-placeholder .icon {
+            font-size: 64px;
+            margin-bottom: 16px;
         }
 
         /* Поддержка: форма */
         .support-input, .support-textarea {
             width: 100%;
-            padding: 10px;
-            border-radius: 16px;
+            padding: 12px;
+            border-radius: 20px;
             border: 1px solid #aaa;
-            margin-bottom: 12px;
+            margin-bottom: 16px;
             background: rgba(255,255,255,0.1);
+            font-size: 14px;
         }
 
         /* ----- ТЕМЫ (общие для всех страниц) ----- */
@@ -347,24 +360,15 @@
     <div class="theme-switch" id="themeSwitch"></div>
     <div class="toast" id="toast"></div>
 
-    <!-- Вкладка: Задачи -->
-    <div id="tasksPage" class="page">
-        <div class="container">
-            <div class="card">
-                <h2 id="tasksTitle">📋 Задачи</h2>
-                <div id="tasksList">
-                    <!-- динамические задачи -->
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Вкладка: Чаты -->
     <div id="chatsPage" class="page">
         <div class="container">
             <div class="card">
                 <h2 id="chatsTitle">💬 Чаты</h2>
-                <p id="chatsPlaceholder">Скоро здесь появятся ваши диалоги...</p>
+                <div class="chats-placeholder">
+                    <div class="icon">💭</div>
+                    <p id="chatsPlaceholder">Скоро здесь появятся ваши диалоги...</p>
+                </div>
             </div>
         </div>
     </div>
@@ -403,12 +407,20 @@
         </div>
     </div>
 
-    <!-- Нижний таб-бар -->
+    <!-- Нижний таб-бар (3 пункта) -->
     <div class="tab-bar">
-        <div class="tab-item" data-tab="tasks">📋 <span id="tabTasksLabel">Задачи</span></div>
-        <div class="tab-item" data-tab="chats">💬 <span id="tabChatsLabel">Чаты</span></div>
-        <div class="tab-item" data-tab="profile">👤 <span id="tabProfileLabel">Анкета</span></div>
-        <div class="tab-item" data-tab="support">🛠️ <span id="tabSupportLabel">Поддержка</span></div>
+        <div class="tab-item" data-tab="chats">
+            <div class="tab-icon">💬</div>
+            <div class="tab-label" id="tabChatsLabel">Чаты</div>
+        </div>
+        <div class="tab-item" data-tab="profile">
+            <div class="tab-icon">👤</div>
+            <div class="tab-label" id="tabProfileLabel">Анкета</div>
+        </div>
+        <div class="tab-item" data-tab="support">
+            <div class="tab-icon">🛠️</div>
+            <div class="tab-label" id="tabSupportLabel">Поддержка</div>
+        </div>
     </div>
 
     <script>
@@ -424,18 +436,15 @@
 
         // --- Элементы табов ---
         const pages = {
-            tasks: document.getElementById('tasksPage'),
             chats: document.getElementById('chatsPage'),
             profile: document.getElementById('profilePage'),
             support: document.getElementById('supportPage')
         };
-        let currentTab = 'tasks';
+        let currentTab = 'chats';
 
         function showTab(tabId) {
-            // Скрыть все страницы
             Object.values(pages).forEach(page => page.classList.remove('active'));
             pages[tabId].classList.add('active');
-            // Обновить активный класс в таб-баре
             document.querySelectorAll('.tab-item').forEach(item => {
                 if (item.dataset.tab === tabId) {
                     item.classList.add('active');
@@ -445,7 +454,6 @@
             });
             currentTab = tabId;
             localStorage.setItem('lastTab', tabId);
-            // Если открыли анкету – обновить аватар
             if (tabId === 'profile') renderAvatar();
         }
 
@@ -468,15 +476,13 @@
             }, 1500);
         }
 
-        // --- Языки и переводы ---
+        // --- Языки и переводы (убрали задачи) ---
         const translations = {
             ru: {
                 langName: 'Русский',
-                tabTasks: 'Задачи',
                 tabChats: 'Чаты',
                 tabProfile: 'Анкета',
                 tabSupport: 'Поддержка',
-                tasksTitle: '📋 Задачи',
                 chatsTitle: '💬 Чаты',
                 chatsPlaceholder: 'Скоро здесь появятся ваши диалоги...',
                 supportTitle: '🛠️ Поддержка',
@@ -489,19 +495,13 @@
                 labelFirstName: 'Имя:',
                 labelBio: '✏️ Описание профиля',
                 labelAvatar: '🖼️ Загрузить аватар',
-                bioPlaceholder: 'Расскажите о себе...',
-                task1: 'Изучить документацию Telegram Mini Apps',
-                task2: 'Сделать дизайн в пиксельном стиле',
-                task3: 'Добавить нижнее меню',
-                task4: 'Протестировать на всех темах'
+                bioPlaceholder: 'Расскажите о себе...'
             },
             en: {
                 langName: 'English',
-                tabTasks: 'Tasks',
                 tabChats: 'Chats',
                 tabProfile: 'Profile',
                 tabSupport: 'Support',
-                tasksTitle: '📋 Tasks',
                 chatsTitle: '💬 Chats',
                 chatsPlaceholder: 'Your conversations will appear here soon...',
                 supportTitle: '🛠️ Support',
@@ -514,11 +514,7 @@
                 labelFirstName: 'Name:',
                 labelBio: '✏️ Profile bio',
                 labelAvatar: '🖼️ Upload avatar',
-                bioPlaceholder: 'Tell about yourself...',
-                task1: 'Learn Telegram Mini Apps docs',
-                task2: 'Make pixel style design',
-                task3: 'Add bottom tab bar',
-                task4: 'Test on all themes'
+                bioPlaceholder: 'Tell about yourself...'
             }
         };
 
@@ -527,67 +523,31 @@
         function applyLanguage(lang) {
             const t = translations[lang];
             if (!t) return;
-            // Тексты табов
-            document.getElementById('tabTasksLabel').innerText = t.tabTasks;
             document.getElementById('tabChatsLabel').innerText = t.tabChats;
             document.getElementById('tabProfileLabel').innerText = t.tabProfile;
             document.getElementById('tabSupportLabel').innerText = t.tabSupport;
-            // Заголовки страниц
-            document.getElementById('tasksTitle').innerText = t.tasksTitle;
             document.getElementById('chatsTitle').innerText = t.chatsTitle;
             document.getElementById('chatsPlaceholder').innerText = t.chatsPlaceholder;
             document.getElementById('supportTitle').innerText = t.supportTitle;
-            const subjectInput = document.getElementById('supportSubject');
-            const messageInput = document.getElementById('supportMessage');
-            subjectInput.placeholder = t.supportSubjectPlaceholder;
-            messageInput.placeholder = t.supportMessagePlaceholder;
+            document.getElementById('supportSubject').placeholder = t.supportSubjectPlaceholder;
+            document.getElementById('supportMessage').placeholder = t.supportMessagePlaceholder;
             document.getElementById('sendSupportBtn').innerText = t.supportSendBtn;
-            // Анкета
             document.getElementById('labelTgId').innerHTML = t.labelTgId;
             document.getElementById('labelUsername').innerHTML = t.labelUsername;
             document.getElementById('labelFirstName').innerHTML = t.labelFirstName;
             document.getElementById('labelBio').innerHTML = t.labelBio;
             document.getElementById('labelAvatar').innerHTML = t.labelAvatar;
             document.getElementById('bioInput').placeholder = t.bioPlaceholder;
-            // Задачи – обновить список
-            renderTasksList(lang);
             langSwitch.innerText = lang === 'ru' ? 'RU' : 'EN';
             localStorage.setItem('selectedLang', lang);
             currentLang = lang;
             showToast(t.langName);
         }
 
-        function renderTasksList(lang) {
-            const t = translations[lang];
-            const tasks = [
-                t.task1,
-                t.task2,
-                t.task3,
-                t.task4
-            ];
-            const container = document.getElementById('tasksList');
-            if (!container) return;
-            container.innerHTML = '';
-            tasks.forEach((task, idx) => {
-                const div = document.createElement('div');
-                div.className = 'task-item';
-                const chk = document.createElement('input');
-                chk.type = 'checkbox';
-                chk.id = `task${idx}`;
-                const label = document.createElement('label');
-                label.htmlFor = `task${idx}`;
-                label.innerText = task;
-                div.appendChild(chk);
-                div.appendChild(label);
-                container.appendChild(div);
-            });
-        }
-
         function toggleLanguage() {
             const newLang = currentLang === 'ru' ? 'en' : 'ru';
             applyLanguage(newLang);
         }
-
         document.getElementById('langSwitch').addEventListener('click', toggleLanguage);
 
         // --- Темы (прежние) ---
@@ -669,7 +629,6 @@
             localStorage.setItem('userBio', userBio);
         });
 
-        // Данные Telegram
         document.getElementById('tgId').textContent = user.id;
         document.getElementById('tgUsername').textContent = user.username || '—';
         document.getElementById('tgFirstName').textContent = `${user.first_name || ''} ${user.last_name || ''}`.trim() || '—';
@@ -682,7 +641,6 @@
                 showToast(translations[currentLang].supportSubjectPlaceholder === 'Тема' ? 'Заполните тему и сообщение' : 'Fill subject and message');
                 return;
             }
-            // Имитация отправки
             showToast(translations[currentLang].supportSent);
             document.getElementById('supportSubject').value = '';
             document.getElementById('supportMessage').value = '';
@@ -692,10 +650,9 @@
         loadSavedTheme();
         applyLanguage(currentLang);
         renderAvatar();
-        // Восстановление последней открытой вкладки
         const lastTab = localStorage.getItem('lastTab');
         if (lastTab && pages[lastTab]) showTab(lastTab);
-        else showTab('tasks');
+        else showTab('chats');
     </script>
 </body>
 </html>
