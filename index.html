@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Mini App — 5 тем</title>
+    <title>Mini App — Тумблер тем</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s;
         }
 
         body {
@@ -20,310 +20,422 @@
         }
 
         .container {
-            max-width: 450px;
+            max-width: 500px;
             margin: 0 auto;
         }
 
-        /* Карточка с информацией */
-        .info-card {
-            border-radius: 24px;
-            padding: 20px;
+        /* Верхняя карточка */
+        .theme-card {
+            border-radius: 28px;
+            padding: 24px 20px;
             margin-bottom: 24px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            box-shadow: 0 6px 14px rgba(0,0,0,0.1);
         }
 
-        /* Блок с текущей темой и солнцем */
+        /* Шапка с солнцем */
         .theme-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
             flex-wrap: wrap;
             gap: 12px;
         }
 
-        .current-theme-label {
-            font-weight: 500;
-            font-size: 14px;
-            opacity: 0.8;
-        }
-
-        .sun-indicator {
+        .sun-block {
             display: flex;
             align-items: center;
-            gap: 10px;
-            background: rgba(255,255,255,0.1);
-            padding: 6px 12px;
-            border-radius: 40px;
+            gap: 12px;
+            background: rgba(128,128,128,0.15);
+            padding: 6px 16px 6px 12px;
+            border-radius: 60px;
+            backdrop-filter: blur(2px);
         }
 
         .sun-circle {
-            width: 32px;
-            height: 32px;
+            width: 38px;
+            height: 38px;
             border-radius: 50%;
             background: gold;
-            box-shadow: 0 0 6px currentColor;
-            transition: background 0.2s;
+            box-shadow: 0 0 8px currentColor;
+            transition: background 0.2s, box-shadow 0.2s;
         }
 
-        .sun-text {
-            font-size: 14px;
-            font-weight: 500;
+        .sun-label {
+            font-weight: 600;
+            font-size: 15px;
         }
 
-        /* Сетка кнопок тем */
+        /* Ползунок (range) */
+        .slider-container {
+            margin: 24px 0 20px;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 13px;
+            opacity: 0.7;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            -webkit-appearance: none;
+            background: #ddd;
+            border-radius: 10px;
+            outline: none;
+        }
+
+        input[type="range"]:focus {
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+        }
+
+        /* Сетка кнопок тем (каждая со своей обводкой) */
         .themes-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
             gap: 12px;
-            margin-bottom: 24px;
+            margin-top: 20px;
         }
 
         .theme-btn {
-            padding: 12px 8px;
+            padding: 10px 8px;
             border-radius: 60px;
             font-weight: 600;
             font-size: 14px;
             cursor: pointer;
             text-align: center;
-            transition: transform 0.1s, filter 0.2s;
             background: transparent;
             border-width: 2px;
             border-style: solid;
+            transition: transform 0.1s, filter 0.2s;
         }
 
         .theme-btn:active {
             transform: scale(0.96);
         }
 
-        /* Дополнительный блок для демо */
+        /* Демо-блок */
         .demo-block {
-            border-radius: 20px;
-            padding: 16px;
+            border-radius: 24px;
+            padding: 18px;
             margin-top: 20px;
         }
 
-        button.demo-btn {
+        button.demo-action {
             width: 100%;
             padding: 12px;
             border: none;
             border-radius: 60px;
             font-weight: 600;
             font-size: 16px;
+            margin-top: 14px;
             cursor: pointer;
-            margin-top: 12px;
         }
 
-        /* ---------- ТЕМЫ (переопределяются через класс на body) ---------- */
-        /* Светлая тема */
+        /* ---------- ТЕМЫ (классы для body) ---------- */
+        /* Светлая */
         body.theme-light {
-            background-color: #f5f5f7;
+            background-color: #f2f2f5;
             color: #1c1c1e;
         }
-        body.theme-light .info-card,
+        body.theme-light .theme-card,
         body.theme-light .demo-block {
             background-color: #ffffff;
-            border: 1px solid #e9e9ef;
+            border: 1px solid #e3e3e8;
         }
         body.theme-light .theme-btn {
             background: #ffffff;
-            border-color: #c6c6c8;
             color: #1c1c1e;
         }
         body.theme-light .theme-btn:hover {
-            background: #e9e9ef;
+            background: #f0f0f2;
         }
-        body.theme-light .demo-btn {
+        body.theme-light input[type="range"] {
+            background: #c6c6c8;
+        }
+        body.theme-light input[type="range"]::-webkit-slider-thumb {
+            background: #007aff;
+        }
+        body.theme-light .demo-action {
             background: #007aff;
             color: white;
         }
 
-        /* Тёмная тема */
+        /* Тёмная */
         body.theme-dark {
             background-color: #0a0a0a;
             color: #e0e0e0;
         }
-        body.theme-dark .info-card,
+        body.theme-dark .theme-card,
         body.theme-dark .demo-block {
             background-color: #1e1e1e;
             border: 1px solid #2c2c2c;
         }
         body.theme-dark .theme-btn {
             background: #1e1e1e;
-            border-color: #3a3a3a;
             color: #e0e0e0;
         }
         body.theme-dark .theme-btn:hover {
             background: #2c2c2c;
         }
-        body.theme-dark .demo-btn {
+        body.theme-dark input[type="range"] {
+            background: #3a3a3a;
+        }
+        body.theme-dark input[type="range"]::-webkit-slider-thumb {
+            background: #0d6efd;
+        }
+        body.theme-dark .demo-action {
             background: #0d6efd;
             color: white;
         }
 
-        /* Фиолетовая тема */
+        /* Фиолетовая */
         body.theme-purple {
-            background-color: #1a0b2e;
+            background-color: #17092b;
             color: #e2d6ff;
         }
-        body.theme-purple .info-card,
+        body.theme-purple .theme-card,
         body.theme-purple .demo-block {
-            background-color: #2e1a47;
+            background-color: #2a1642;
             border: 1px solid #6b3fa0;
         }
         body.theme-purple .theme-btn {
-            background: #2e1a47;
-            border-color: #a57cf0;
+            background: #2a1642;
             color: #f0e6ff;
         }
         body.theme-purple .theme-btn:hover {
-            background: #4a2a6e;
+            background: #45216b;
         }
-        body.theme-purple .demo-btn {
+        body.theme-purple input[type="range"] {
+            background: #5a3b7a;
+        }
+        body.theme-purple input[type="range"]::-webkit-slider-thumb {
+            background: #b77eff;
+        }
+        body.theme-purple .demo-action {
             background: #9b59b6;
             color: white;
         }
 
-        /* Зелёная тема */
+        /* Зелёная */
         body.theme-green {
-            background-color: #0a2f1a;
-            color: #c8e6d9;
+            background-color: #0a2a16;
+            color: #c8f0dc;
         }
-        body.theme-green .info-card,
+        body.theme-green .theme-card,
         body.theme-green .demo-block {
-            background-color: #1b4d2b;
-            border: 1px solid #2e7d5e;
+            background-color: #164e2c;
+            border: 1px solid #2e8b57;
         }
         body.theme-green .theme-btn {
-            background: #1b4d2b;
-            border-color: #4caf7f;
+            background: #164e2c;
             color: #e0f5e8;
         }
         body.theme-green .theme-btn:hover {
-            background: #2e6b3e;
+            background: #236b3c;
         }
-        body.theme-green .demo-btn {
+        body.theme-green input[type="range"] {
+            background: #3b8a5a;
+        }
+        body.theme-green input[type="range"]::-webkit-slider-thumb {
+            background: #4caf7f;
+        }
+        body.theme-green .demo-action {
             background: #2ecc71;
-            color: #0a2f1a;
+            color: #0a2a16;
         }
 
-        /* Красная тема */
+        /* Красная */
         body.theme-red {
-            background-color: #2b0a0a;
-            color: #ffcfcf;
+            background-color: #2b0c0c;
+            color: #ffd6d6;
         }
-        body.theme-red .info-card,
+        body.theme-red .theme-card,
         body.theme-red .demo-block {
-            background-color: #4a1a1a;
-            border: 1px solid #b53b3b;
+            background-color: #4e1c1c;
+            border: 1px solid #bf4b4b;
         }
         body.theme-red .theme-btn {
-            background: #4a1a1a;
-            border-color: #e67373;
-            color: #ffdddd;
+            background: #4e1c1c;
+            color: #ffdede;
         }
         body.theme-red .theme-btn:hover {
-            background: #6e2c2c;
+            background: #732b2b;
         }
-        body.theme-red .demo-btn {
+        body.theme-red input[type="range"] {
+            background: #aa5555;
+        }
+        body.theme-red input[type="range"]::-webkit-slider-thumb {
+            background: #ff7a7a;
+        }
+        body.theme-red .demo-action {
             background: #e74c3c;
+            color: white;
+        }
+
+        /* Синяя */
+        body.theme-blue {
+            background-color: #0a1a3a;
+            color: #cfe3ff;
+        }
+        body.theme-blue .theme-card,
+        body.theme-blue .demo-block {
+            background-color: #1a2f5c;
+            border: 1px solid #3a6ea5;
+        }
+        body.theme-blue .theme-btn {
+            background: #1a2f5c;
+            color: #d6e6ff;
+        }
+        body.theme-blue .theme-btn:hover {
+            background: #26487a;
+        }
+        body.theme-blue input[type="range"] {
+            background: #4c7db3;
+        }
+        body.theme-blue input[type="range"]::-webkit-slider-thumb {
+            background: #5c9eff;
+        }
+        body.theme-blue .demo-action {
+            background: #3b82f6;
             color: white;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- карточка с информацией и "солнцем" -->
-        <div class="info-card">
-            <div class="theme-header">
-                <div class="current-theme-label">🎨 Текущая тема</div>
-                <div class="sun-indicator" id="sunIndicator">
-                    <div class="sun-circle" id="sunCircle"></div>
-                    <span class="sun-text" id="sunText">солнце</span>
-                </div>
-            </div>
-            <p style="margin-bottom: 8px;">Выберите тему оформления:</p>
-            <div class="themes-grid" id="themeButtonsContainer">
-                <!-- кнопки будут вставлены динамически, но можно и статикой -->
+<div class="container">
+    <div class="theme-card">
+        <div class="theme-header">
+            <div class="current-label">🎨 Тумблер темы</div>
+            <div class="sun-block" id="sunBlock">
+                <div class="sun-circle" id="sunCircle"></div>
+                <span class="sun-label" id="sunLabel">Тёмная</span>
             </div>
         </div>
 
-        <!-- демо-блок для наглядности -->
-        <div class="demo-block">
-            <p style="margin-bottom: 12px;">✨ Пример контента</p>
-            <p>Этот блок и кнопка ниже меняют цвета вместе с темой.</p>
-            <button class="demo-btn" id="demoActionBtn">Нажми меня</button>
+        <!-- ползунок -->
+        <div class="slider-container">
+            <div class="slider-label">
+                <span>← перетащите →</span>
+                <span id="themeStepName">тёмная</span>
+            </div>
+            <input type="range" id="themeSlider" min="0" max="5" step="1" value="1">
         </div>
+
+        <!-- кнопки с обводкой -->
+        <div class="themes-grid" id="themesGrid"></div>
     </div>
 
-    <script>
-        // 1. Инициализация Telegram WebApp
-        const tg = window.Telegram.WebApp;
-        tg.expand(); // растянуть на весь экран
-        // убираем основную кнопку, если не нужна (можно оставить)
-        tg.MainButton.hide();
+    <div class="demo-block">
+        <p>✨ Пример содержимого</p>
+        <p>Цвет фона, текста и кнопок меняется согласно теме.</p>
+        <button class="demo-action" id="demoBtn">Показать текущую тему</button>
+    </div>
+</div>
 
-        // 2. Определение тем: название, цвет обводки (для кнопок), цвет солнца
-        const themes = [
-            { id: 'light', name: 'Светлая', borderColor: '#c6c6c8', sunColor: '#f39c12' },
-            { id: 'dark',  name: 'Тёмная',  borderColor: '#3a3a3a', sunColor: '#f1c40f' },
-            { id: 'purple',name: 'Фиолетовая', borderColor: '#a57cf0', sunColor: '#d58eff' },
-            { id: 'green', name: 'Зелёная', borderColor: '#4caf7f', sunColor: '#7bed9f' },
-            { id: 'red',   name: 'Красная', borderColor: '#e67373', sunColor: '#ff7e67' }
-        ];
+<script>
+    // Инициализация Telegram WebApp
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+    tg.MainButton.hide();
 
-        // 3. Функция применения темы
-        function setTheme(themeId) {
-            // убираем все классы тем
-            const body = document.body;
-            themes.forEach(t => body.classList.remove(`theme-${t.id}`));
-            body.classList.add(`theme-${themeId}`);
-            // обновляем индикатор солнца
-            const theme = themes.find(t => t.id === themeId);
-            if (theme) {
-                const sunCircle = document.getElementById('sunCircle');
-                const sunText = document.getElementById('sunText');
-                sunCircle.style.backgroundColor = theme.sunColor;
-                sunCircle.style.boxShadow = `0 0 6px ${theme.sunColor}`;
-                sunText.textContent = theme.name;
-            }
-            // сохраняем тему в localStorage
-            localStorage.setItem('selectedTheme', themeId);
+    // Список тем (индекс, id, название, цвет солнца, цвет ползунка/обводка)
+    const themes = [
+        { id: 'light',  name: 'Светлая',  sunColor: '#f1c40f', borderColor: '#c6c6c8' },
+        { id: 'dark',   name: 'Тёмная',   sunColor: '#f9e45b', borderColor: '#3a3a3a' },
+        { id: 'purple', name: 'Фиолетовая', sunColor: '#cd9eff', borderColor: '#a57cf0' },
+        { id: 'green',  name: 'Зелёная',  sunColor: '#7bed9f', borderColor: '#4caf7f' },
+        { id: 'red',    name: 'Красная',  sunColor: '#ff8a7a', borderColor: '#e67373' },
+        { id: 'blue',   name: 'Синяя',    sunColor: '#6aa9ff', borderColor: '#5c9eff' }
+    ];
+
+    // DOM элементы
+    const slider = document.getElementById('themeSlider');
+    const themeStepName = document.getElementById('themeStepName');
+    const sunCircle = document.getElementById('sunCircle');
+    const sunLabel = document.getElementById('sunLabel');
+    const themesGrid = document.getElementById('themesGrid');
+
+    // Применить тему по индексу
+    function applyThemeByIndex(index) {
+        const theme = themes[index];
+        if (!theme) return;
+        // Удаляем все классы тем
+        themes.forEach(t => document.body.classList.remove(`theme-${t.id}`));
+        document.body.classList.add(`theme-${theme.id}`);
+        // Обновляем солнце
+        sunCircle.style.backgroundColor = theme.sunColor;
+        sunCircle.style.boxShadow = `0 0 8px ${theme.sunColor}`;
+        sunLabel.textContent = theme.name;
+        themeStepName.textContent = theme.name;
+        // Сохраняем в localStorage
+        localStorage.setItem('selectedThemeIndex', index);
+        // Синхронизация ползунка (если вызов не из слайдера)
+        if (slider.value != index) slider.value = index;
+    }
+
+    // Получить индекс сохранённой темы
+    function getSavedThemeIndex() {
+        const saved = localStorage.getItem('selectedThemeIndex');
+        if (saved !== null && !isNaN(parseInt(saved))) {
+            let idx = parseInt(saved);
+            if (idx >= 0 && idx < themes.length) return idx;
         }
+        return 1; // по умолчанию тёмная (индекс 1)
+    }
 
-        // 4. Загружаем сохранённую тему или 'dark' по умолчанию
-        const savedTheme = localStorage.getItem('selectedTheme');
-        const defaultTheme = savedTheme && themes.find(t => t.id === savedTheme) ? savedTheme : 'dark';
-        setTheme(defaultTheme);
-
-        // 5. Генерация кнопок с обводкой нужного цвета (чтобы каждая кнопка имела свою рамку)
-        const container = document.getElementById('themeButtonsContainer');
-        themes.forEach(theme => {
+    // Генерация кнопок с их собственной обводкой
+    function generateThemeButtons() {
+        themesGrid.innerHTML = '';
+        themes.forEach((theme, idx) => {
             const btn = document.createElement('button');
             btn.textContent = theme.name;
             btn.classList.add('theme-btn');
-            // задаём обводку в соответствии с темой (даже когда другая тема активна, обводка остаётся цветовой меткой)
             btn.style.borderColor = theme.borderColor;
             btn.style.borderWidth = '2px';
             btn.style.borderStyle = 'solid';
-            // при клике переключаем тему
-            btn.addEventListener('click', () => setTheme(theme.id));
-            container.appendChild(btn);
-        });
-
-        // 6. Дополнительная кнопка демо (просто алерт, но можно связать с Telegram)
-        document.getElementById('demoActionBtn').addEventListener('click', () => {
-            const currentTheme = document.body.className.match(/theme-(\w+)/)?.[1] || 'dark';
-            tg.showPopup({
-                title: "Действие",
-                message: `Ты нажал кнопку в теме "${themes.find(t=>t.id===currentTheme)?.name}".\nПриложение может делать что угодно!`,
-                buttons: [{type: "ok"}]
+            btn.addEventListener('click', () => {
+                applyThemeByIndex(idx);
             });
+            themesGrid.appendChild(btn);
         });
+    }
 
-        // 7. Для удобства: если в Telegram есть возможность закрыть приложение через системную кнопку, добавим обработку кнопки "назад"?
-        // Просто покажем, как можно закрыть через sendData (опционально)
-        // Вешаем слушатель на закрытие страницы, если нужно — ничего не делаем.
-    </script>
+    // Слушатель ползунка
+    slider.addEventListener('input', (e) => {
+        const idx = parseInt(e.target.value);
+        applyThemeByIndex(idx);
+    });
+
+    // Демо-кнопка: показываем текущую тему через Telegram Popup
+    document.getElementById('demoBtn').addEventListener('click', () => {
+        const currentThemeClass = document.body.className.match(/theme-(\w+)/)?.[1];
+        const themeObj = themes.find(t => t.id === currentThemeClass);
+        const themeName = themeObj ? themeObj.name : 'тёмная';
+        tg.showPopup({
+            title: '🎨 Текущая тема',
+            message: `Активна тема: "${themeName}".\nИнтерфейс полностью перестроен.`,
+            buttons: [{type: 'ok'}]
+        });
+    });
+
+    // Инициализация
+    generateThemeButtons();
+    const startIndex = getSavedThemeIndex();
+    applyThemeByIndex(startIndex);
+</script>
 </body>
 </html>
