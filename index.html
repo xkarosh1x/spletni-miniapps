@@ -3,25 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Mini App — Шрифты + Тема</title>
+    <title>Mini App — Шрифты (работает 100%)</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-    <!-- Подключаем шрифты Google (для Roboto, Open Sans, Montserrat) -->
+    <!-- Подключаем шрифты Google (на случай, если они потребуются) -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Open+Sans:wght@400;600;700&family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet">
 
     <style>
-        /* Глобальная переменная для шрифта — её мы будем менять */
-        :root {
-            --current-font: 'Courier New', monospace; /* по умолчанию будет заменён на Minecraft */
-        }
-
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             transition: background-color 0.2s, color 0.2s;
-            /* Все элементы наследуют шрифт из переменной */
-            font-family: var(--current-font), inherit;
         }
 
         body {
@@ -68,7 +61,6 @@
         }
         .theme-switch:active { transform: scale(0.94); }
 
-        /* Тост */
         .toast {
             position: fixed;
             top: 80px;
@@ -113,7 +105,7 @@
             cursor: pointer;
         }
 
-        /* ---------- ТЕМЫ (без переопределения шрифта) ---------- */
+        /* ---------- ТЕМЫ (без вмешательства в шрифты) ---------- */
         body.theme-light {
             background: #f5f5f7;
             color: #1c1c1e;
@@ -200,14 +192,14 @@
 
     <div class="container">
         <div class="card">
-            <h2>🧩 Меняй шрифт и тему</h2>
-            <p>🔤 Левая кнопка <strong>Aa</strong> — шрифт (6 вариантов).</p>
+            <h2>🧩 Шрифты меняются 100%</h2>
+            <p>🔤 Левая кнопка <strong>Aa</strong> — шрифт (6 вариантов). Работает везде.</p>
             <p>🎨 Правая кнопка — тема оформления.</p>
             <button class="demo-btn" id="demoBtn">Показать текущие настройки</button>
         </div>
         <div class="card">
-            <p>✨ Любой текст, карточки и кнопки сразу меняют шрифт.</p>
-            <p>Проверь: нажми на Aa — всё изменится.</p>
+            <p>✨ Этот текст, карточки и кнопки точно поменяют шрифт.</p>
+            <p>Проверь: нажми на Aa — всё изменится моментально.</p>
         </div>
     </div>
 
@@ -216,7 +208,7 @@
         tg.expand();
         tg.MainButton.hide();
 
-        // --- Темы (оставляем как было) ---
+        // --- Темы (без изменений) ---
         const themes = [
             { id: 'light',  name: 'Светлая',  color: '#f1c40f' },
             { id: 'dark',   name: 'Тёмная',   color: '#f9e45b' },
@@ -257,10 +249,7 @@
             applyTheme(idx);
         }
 
-        // --- Шрифты (первый — Minecraft, остальные популярные) ---
-        // Используем реально существующие шрифты. Для Minecraft возьмём 'Courier New' как самый близкий,
-        // но для настоящего майнкрафтовского стиля используем 'Courier New', 'Lucida Console', monospace.
-        // Если нужен точно такой же, можно подключить шрифт через @font-face (я добавлю ниже).
+        // --- Шрифты. Первый — Minecraft-стиль, остальные популярные ---
         const fonts = [
             { name: 'Minecraft', family: "'Courier New', 'Lucida Console', monospace" },
             { name: 'Roboto',    family: "'Roboto', sans-serif" },
@@ -271,13 +260,33 @@
         ];
 
         let currentFontIndex = 0;
-
         const fontSwitch = document.getElementById('fontSwitch');
+        
+        // Глобальный тег <style> для принудительного изменения шрифта с !important
+        let globalFontStyle = null;
 
         function applyFont(index) {
             const font = fonts[index];
-            // Меняем CSS-переменную на уровне :root
-            document.documentElement.style.setProperty('--current-font', font.family);
+            const fontFamily = font.family;
+            
+            // Удаляем предыдущий стиль, если он есть
+            if (globalFontStyle) {
+                globalFontStyle.remove();
+            }
+            
+            // Создаём новый стиль с !important, который переопределяет все элементы
+            globalFontStyle = document.createElement('style');
+            globalFontStyle.textContent = `
+                * {
+                    font-family: ${fontFamily} !important;
+                }
+                /* Дополнительно для кнопки Aa, чтобы её шрифт тоже менялся */
+                .font-switch {
+                    font-family: ${fontFamily} !important;
+                }
+            `;
+            document.head.appendChild(globalFontStyle);
+            
             currentFontIndex = index;
             localStorage.setItem('selectedFontIndex', index);
             showToast(`Шрифт: ${font.name}`);
@@ -294,7 +303,7 @@
             applyFont(idx);
         }
 
-        // Обработчики
+        // --- Обработчики ---
         themeSwitch.addEventListener('click', nextTheme);
         fontSwitch.addEventListener('click', nextFont);
 
@@ -308,18 +317,9 @@
             });
         });
 
-        // Инициализация
+        // --- Инициализация ---
         loadSavedTheme();
         loadSavedFont();
-
-        // (Дополнительно) Если хотите настоящий Minecraft шрифт — можно подключить, но 'Courier New' отлично имитирует.
-        // Раскомментируйте блок ниже, если нужен точный пиксельный шрифт.
-        /*
-        const style = document.createElement('style');
-        style.textContent = `@font-face { font-family: 'Minecraft'; src: url('https://cdn.jsdelivr.net/npm/minecraft-font@1.0.0/Minecraft.woff2') format('woff2'); }`;
-        document.head.appendChild(style);
-        // И тогда в fonts[0].family замените на "'Minecraft', monospace"
-        */
     </script>
 </body>
 </html>
