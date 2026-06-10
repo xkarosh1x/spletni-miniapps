@@ -699,19 +699,57 @@
             }
         });
 
-        // --- Поддержка: отправка ---
-        document.getElementById('sendSupportBtn').addEventListener('click', () => {
-            const subject = document.getElementById('supportSubject').value;
-            const message = document.getElementById('supportMessage').value;
-            const t = translations[currentLang];
-            if (!subject.trim() || !message.trim()) {
-                showToast(t.supportSubjectPlaceholder === 'Тема' ? 'Заполните тему и сообщение' : 'Fill subject and message');
-                return;
-            }
+        // --- Поддержка: отправка через POST на сервер ---
+document.getElementById('sendSupportBtn').addEventListener('click', async () => {
+    const subject = document.getElementById('supportSubject').value;
+    const message = document.getElementById('supportMessage').value;
+    const t = translations[currentLang];
+
+    if (!subject.trim() || !message.trim()) {
+        showToast(t.supportSubjectPlaceholder === 'Тема' ? 'Заполните тему и сообщение' : 'Fill subject and message');
+        return;
+    }
+
+    // Получаем данные пользователя из Telegram (если есть)
+    const userId = tg.initDataUnsafe?.user?.id || null;
+    const username = tg.initDataUnsafe?.user?.username || null;
+    const firstName = tg.initDataUnsafe?.user?.first_name || null;
+
+    // Отключаем кнопку на время отправки, чтобы избежать повторных кликов
+    const sendBtn = document.getElementById('sendSupportBtn');
+    sendBtn.disabled = true;
+    sendBtn.innerText = '⏳ Отправка...';
+
+    try {
+        const response = await fetch('/api/support', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                subject: subject.trim(),
+                message: message.trim(),
+                userId: userId,
+                username: username,
+                firstName: firstName
+            })
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
             showToast(t.supportSent);
             document.getElementById('supportSubject').value = '';
             document.getElementById('supportMessage').value = '';
-        });
+        } else {
+            showToast(result.error || 'Ошибка отправки. Попробуйте позже.');
+        }
+    } catch (error) {
+        console.error('Ошибка:', error);
+        showToast('Не удалось отправить сообщение. Проверьте интернет.');
+    } finally {
+        sendBtn.disabled = false;
+        sendBtn.innerText = t.supportSendBtn;
+    }
+});
 
         // --- Инициализация ---
         loadSavedTheme();
