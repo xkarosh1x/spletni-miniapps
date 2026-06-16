@@ -111,7 +111,6 @@
             cursor: not-allowed;
         }
 
-        /* === ИГРА === */
         .game-area {
             text-align: center;
             padding: 10px 0;
@@ -185,7 +184,6 @@
             transform: scale(0.95);
         }
 
-        /* === МОДАЛКА ЛИДЕРБОРДА === */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -288,7 +286,6 @@
             opacity: 0.7;
         }
 
-        /* === АНКЕТА === */
         .avatar-container {
             display: flex;
             justify-content: center;
@@ -350,7 +347,6 @@
         }
         .settings-icon:active { transform: scale(0.9); }
 
-        /* === МОДАЛКА НАСТРОЕК === */
         .settings-modal .modal-content {
             max-width: 320px;
         }
@@ -390,7 +386,6 @@
         }
         .avatar-settings { margin: 16px 0; }
 
-        /* === ПОДДЕРЖКА === */
         .support-input, .support-textarea {
             width: 100%;
             padding: 12px;
@@ -400,7 +395,7 @@
             background: rgba(255,255,255,0.1);
         }
 
-        /* === ТЕМЫ (общие цвета) === */
+        /* === ТЕМЫ === */
         body.theme-light {
             background: #f5f5f7;
             color: #1c1c1e;
@@ -573,7 +568,6 @@
 <body>
     <div class="toast" id="toast"></div>
 
-    <!-- Вкладка: Игра -->
     <div id="gamePage" class="page active">
         <div class="container">
             <div class="card">
@@ -591,7 +585,6 @@
         </div>
     </div>
 
-    <!-- Вкладка: Анкета -->
     <div id="profilePage" class="page">
         <div class="container">
             <div class="card" style="position: relative;">
@@ -609,7 +602,6 @@
         </div>
     </div>
 
-    <!-- Вкладка: Поддержка -->
     <div id="supportPage" class="page">
         <div class="container">
             <div class="card">
@@ -621,7 +613,6 @@
         </div>
     </div>
 
-    <!-- Модалка лидерборда -->
     <div class="modal-overlay" id="leaderboardModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -634,7 +625,6 @@
         </div>
     </div>
 
-    <!-- Модалка настроек -->
     <div class="modal-overlay settings-modal" id="settingsModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -653,7 +643,6 @@
         </div>
     </div>
 
-    <!-- Таб-бар -->
     <div class="tab-bar">
         <div class="tab-item active" data-tab="game">
             <div class="tab-icon">🎮</div>
@@ -679,7 +668,6 @@
             user = { id: 123456, first_name: "Игрок", last_name: "", username: "pixel_player" };
         }
 
-        // --- Переключение табов ---
         const pages = {
             game: document.getElementById('gamePage'),
             profile: document.getElementById('profilePage'),
@@ -703,7 +691,6 @@
             item.addEventListener('click', () => showTab(item.dataset.tab));
         });
 
-        // --- Тост ---
         const toast = document.getElementById('toast');
         let toastTimeout = null;
 
@@ -719,7 +706,6 @@
             }, 1500);
         }
 
-        // --- Языки ---
         const translations = {
             ru: {
                 tabGame: 'Игра',
@@ -794,7 +780,6 @@
             currentLang = lang;
         }
 
-        // --- Темы ---
         const themes = [
             { id: 'light', name: 'Светлая', color: '#f1c40f' },
             { id: 'dark', name: 'Тёмная', color: '#9ca3af' },
@@ -822,7 +807,7 @@
             applyTheme(idx);
         }
 
-        // ====== ИГРА (с защитой от гонок) ======
+        // ===== ИГРА =====
         let currentScore = 0;
         const clickCircle = document.getElementById('clickCircle');
         const scoreDisplay = document.getElementById('gameScore');
@@ -835,7 +820,6 @@
             if (navigator.vibrate) navigator.vibrate(10);
         }
 
-        // Отправка клика на сервер без ожидания
         async function sendClick() {
             if (!user) return;
             try {
@@ -849,15 +833,12 @@
                 });
                 const data = await res.json();
                 if (data.success) {
-                    // Если сервер вернул значение больше текущего – обновляем
                     if (data.score > currentScore) {
                         currentScore = data.score;
                         scoreDisplay.innerText = currentScore;
                     }
-                    // Если меньше или равно – ничего не делаем (локально уже больше)
                 } else {
                     showToast(translations[currentLang].clickError);
-                    // При ошибке перезагружаем данные с сервера
                     await loadGameData();
                 }
             } catch (e) {
@@ -866,25 +847,20 @@
             }
         }
 
-        // Обработчик клика по кругу – мгновенное увеличение
         function handleClick() {
             if (!user) return;
-            // Оптимистичное обновление
             currentScore++;
             scoreDisplay.innerText = currentScore;
             playClickAnimation();
-            // Отправляем запрос асинхронно
             sendClick();
         }
 
-        // События
         clickCircle.addEventListener('click', handleClick);
         clickCircle.addEventListener('touchstart', (e) => {
             e.preventDefault();
             handleClick();
         });
 
-        // Загрузка данных с сервера (синхронизация)
         async function loadGameData() {
             try {
                 const res = await fetch('/api/leaderboard');
@@ -895,7 +871,6 @@
                         currentScore = myEntry.score;
                         scoreDisplay.innerText = currentScore;
                     } else {
-                        // Если пользователя нет в лидерборде – сброс до 0
                         currentScore = 0;
                         scoreDisplay.innerText = '0';
                     }
@@ -905,14 +880,13 @@
             }
         }
 
-        // Автоматическая синхронизация с сервером каждые 3 секунды
         setInterval(() => {
             if (currentTab === 'game') {
                 loadGameData();
             }
-        }, 3000);
+        }, 5000);
 
-        // ====== ЛИДЕРБОРД (модалка) ======
+        // ===== ЛИДЕРБОРД =====
         const leaderboardModal = document.getElementById('leaderboardModal');
         const leaderboardOpenBtn = document.getElementById('leaderboardOpenBtn');
         const leaderboardCloseBtn = document.getElementById('leaderboardCloseBtn');
@@ -971,7 +945,7 @@
             if (e.target === leaderboardModal) leaderboardModal.classList.remove('active');
         });
 
-        // --- АВАТАР ---
+        // ===== АВАТАР =====
         let currentAvatarBase64 = localStorage.getItem('userAvatar') || null;
 
         function renderAvatar() {
@@ -1001,7 +975,7 @@
             showToast(t.toastAvatarUpdated || 'Аватар обновлён');
         }
 
-        // --- ПРОФИЛЬ ---
+        // ===== ПРОФИЛЬ =====
         const bioInput = document.getElementById('bioInput');
         let userBio = localStorage.getItem('userBio') || '';
         bioInput.value = userBio;
@@ -1012,7 +986,7 @@
         document.getElementById('tgUsername').textContent = user.username || '—';
         document.getElementById('tgFirstName').textContent = `${user.first_name || ''} ${user.last_name || ''}`.trim() || '—';
 
-        // --- МОДАЛКА НАСТРОЕК ---
+        // ===== НАСТРОЙКИ =====
         const settingsModal = document.getElementById('settingsModal');
         const settingsIcon = document.getElementById('settingsIcon');
         const settingsCloseBtn = document.getElementById('settingsCloseBtn');
@@ -1064,7 +1038,7 @@
             }
         });
 
-        // --- ПОДДЕРЖКА ---
+        // ===== ПОДДЕРЖКА =====
         document.getElementById('sendSupportBtn').addEventListener('click', async () => {
             const subject = document.getElementById('supportSubject').value;
             const message = document.getElementById('supportMessage').value;
@@ -1103,14 +1077,14 @@
             sendBtn.innerText = t.supportSendBtn;
         });
 
-        // --- ИНИЦИАЛИЗАЦИЯ ---
+        // ===== ИНИЦИАЛИЗАЦИЯ =====
         loadSavedTheme();
         applyLanguage(currentLang);
         renderAvatar();
         const lastTab = localStorage.getItem('lastTab');
         if (lastTab && pages[lastTab]) showTab(lastTab);
         else showTab('game');
-        await loadGameData();
+        loadGameData();
     </script>
 </body>
 </html>
