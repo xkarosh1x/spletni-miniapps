@@ -376,6 +376,23 @@
             background: rgba(255,255,255,0.1);
         }
 
+        /* ===== АНИМАЦИЯ "+1" ===== */
+        .float-text {
+            position: fixed;
+            pointer-events: none;
+            font-size: 28px;
+            font-weight: bold;
+            color: #ffd700;
+            text-shadow: 0 0 15px rgba(255,215,0,0.6), 0 0 30px rgba(255,215,0,0.3);
+            z-index: 9999;
+            animation: floatUp 0.8s ease-out forwards;
+            font-family: 'Courier New', monospace !important;
+        }
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0) scale(0.8); }
+            100% { opacity: 0; transform: translateY(-100px) scale(1.2); }
+        }
+
         /* === ТЕМЫ === */
         body.theme-light {
             background: #f5f5f7;
@@ -403,6 +420,10 @@
         }
         body.theme-light .leaderboard-btn {
             border-color: #ccc;
+        }
+        body.theme-light .float-text {
+            color: #e67e22;
+            text-shadow: 0 0 15px rgba(230,126,34,0.6);
         }
 
         body.theme-dark {
@@ -808,7 +829,22 @@
             if (navigator.vibrate) navigator.vibrate(10);
         }
 
-        // Отправка текущего счёта на сервер (синхронизация)
+        // === ЭФФЕКТ "+1" ===
+        function showFloatingText(clientX, clientY) {
+            const el = document.createElement('div');
+            el.className = 'float-text';
+            el.textContent = '+1';
+            // Случайное смещение по X и Y для разнообразия
+            const offsetX = (Math.random() - 0.5) * 80;
+            const offsetY = (Math.random() - 0.5) * 40 - 20; // небольшой разброс
+            el.style.left = (clientX + offsetX) + 'px';
+            el.style.top = (clientY + offsetY) + 'px';
+            document.body.appendChild(el);
+            // Удаляем после анимации
+            setTimeout(() => el.remove(), 800);
+        }
+
+        // Синхронизация с сервером
         async function syncScore() {
             if (!user) return;
             try {
@@ -832,22 +868,37 @@
         }
 
         // Обработчик клика
-        function handleClick() {
+        function handleClick(e) {
             if (!user) return;
+            // Координаты для "+1"
+            let clientX, clientY;
+            if (e.clientX !== undefined) {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            } else if (e.touches) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                // fallback – центр круга
+                const rect = clickCircle.getBoundingClientRect();
+                clientX = rect.left + rect.width/2;
+                clientY = rect.top + rect.height/2;
+            }
+            showFloatingText(clientX, clientY);
+
             currentScore++;
             scoreDisplay.innerText = currentScore;
             playClickAnimation();
-            // Асинхронная синхронизация (не ждём)
-            syncScore();
+            syncScore(); // асинхронно
         }
 
         clickCircle.addEventListener('click', handleClick);
         clickCircle.addEventListener('touchstart', (e) => {
             e.preventDefault();
-            handleClick();
+            handleClick(e);
         });
 
-        // Загрузка данных с сервера (для первоначальной синхронизации)
+        // Загрузка данных с сервера
         async function loadGameData() {
             try {
                 const res = await fetch('/api/leaderboard');
@@ -863,7 +914,7 @@
             }
         }
 
-        // Периодическая синхронизация каждые 2 секунды
+        // Периодическая синхронизация
         setInterval(() => {
             if (currentTab === 'game') {
                 syncScore();
@@ -1069,7 +1120,6 @@
         if (lastTab && pages[lastTab]) showTab(lastTab);
         else showTab('game');
 
-        // Асинхронная инициализация данных
         (async function init() {
             await loadGameData();
             await syncScore();
