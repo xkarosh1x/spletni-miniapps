@@ -823,7 +823,6 @@
                 });
                 const data = await res.json();
                 if (data.success && data.score > currentScore) {
-                    // Если сервер вернул больше – обновляем локально
                     currentScore = data.score;
                     scoreDisplay.innerText = currentScore;
                 }
@@ -838,7 +837,7 @@
             currentScore++;
             scoreDisplay.innerText = currentScore;
             playClickAnimation();
-            // Отправляем синхронно (но не ждём)
+            // Асинхронная синхронизация (не ждём)
             syncScore();
         }
 
@@ -1069,9 +1068,12 @@
         const lastTab = localStorage.getItem('lastTab');
         if (lastTab && pages[lastTab]) showTab(lastTab);
         else showTab('game');
-        await loadGameData();
-        // Сразу синхронизируем счёт после загрузки
-        await syncScore();
+
+        // Асинхронная инициализация данных
+        (async function init() {
+            await loadGameData();
+            await syncScore();
+        })();
     </script>
 </body>
 </html>
