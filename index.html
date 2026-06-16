@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Mini App — Игра + Профиль + Поддержка</title>
+    <title>Mini App — Кликер</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * {
@@ -17,6 +17,7 @@
         body {
             padding: 20px 20px 70px 20px;
             min-height: 100vh;
+            overflow-x: hidden;
         }
 
         /* Тост */
@@ -114,34 +115,138 @@
             cursor: not-allowed;
         }
 
-        /* Игра (кликер) */
-        .click-area {
+        /* ===== ИГРА (кликер) ===== */
+        .game-area {
             text-align: center;
-            padding: 20px 0;
-        }
-        .score-display {
-            font-size: 64px;
-            font-weight: bold;
-            margin: 20px 0;
-        }
-        .click-btn {
-            font-size: 28px;
-            padding: 20px 40px;
-            border-radius: 60px;
-            border: none;
-            cursor: pointer;
-            transition: transform 0.1s;
-            user-select: none;
-        }
-        .click-btn:active {
-            transform: scale(0.95);
-        }
-        .click-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
+            padding: 10px 0;
         }
 
-        /* Лидерборд */
+        /* Круглая кнопка-кликер */
+        .click-circle {
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            margin: 20px auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            position: relative;
+            border: 4px solid rgba(255,255,255,0.2);
+            transition: transform 0.1s ease;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+        }
+        .click-circle:active {
+            transform: scale(0.92);
+        }
+        .click-circle .score-number {
+            font-size: 52px;
+            font-weight: bold;
+            line-height: 1;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        .click-circle .score-label {
+            font-size: 16px;
+            opacity: 0.7;
+            margin-top: 4px;
+        }
+        .click-circle .click-effect {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            pointer-events: none;
+            background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+            opacity: 0;
+            transform: scale(1);
+            transition: none;
+        }
+        .click-circle .click-effect.active {
+            animation: clickRipple 0.3s ease-out forwards;
+        }
+
+        @keyframes clickRipple {
+            0% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(1.8); }
+        }
+
+        /* Кнопка "Лидерборд" */
+        .leaderboard-btn {
+            margin-top: 16px;
+            padding: 12px 24px;
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 40px;
+            background: transparent;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            transition: 0.15s;
+        }
+        .leaderboard-btn:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        .leaderboard-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* ===== МОДАЛЬНОЕ ОКНО ЛИДЕРБОРДА ===== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+
+        .modal-content {
+            max-width: 400px;
+            width: 100%;
+            max-height: 80vh;
+            background: #1e1e1e;
+            border-radius: 32px;
+            padding: 24px;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+            overflow-y: auto;
+            position: relative;
+        }
+        body.theme-light .modal-content {
+            background: #ffffff;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        body.theme-light .modal-header {
+            border-bottom-color: rgba(0,0,0,0.1);
+        }
+        .modal-header h3 { font-size: 20px; }
+        .modal-close {
+            font-size: 28px;
+            cursor: pointer;
+            opacity: 0.6;
+            transition: 0.15s;
+            background: none;
+            border: none;
+            color: inherit;
+        }
+        .modal-close:hover { opacity: 1; }
+
         .leaderboard-list {
             list-style: none;
             padding: 0;
@@ -150,15 +255,15 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px 12px;
+            padding: 10px 14px;
             border-radius: 12px;
             margin-bottom: 4px;
-            background: rgba(255,255,255,0.05);
         }
         .leaderboard-item .rank {
             font-weight: bold;
-            width: 30px;
+            width: 35px;
             text-align: center;
+            font-size: 14px;
         }
         .leaderboard-item .name {
             flex: 1;
@@ -166,9 +271,11 @@
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+            font-size: 15px;
         }
         .leaderboard-item .score {
             font-weight: bold;
+            font-size: 16px;
         }
         .leaderboard-item.top1 { background: rgba(255,215,0,0.2); }
         .leaderboard-item.top2 { background: rgba(192,192,192,0.2); }
@@ -177,6 +284,9 @@
             border: 1px solid currentColor;
             border-color: rgba(255,255,255,0.3);
         }
+        body.theme-light .leaderboard-item.me {
+            border-color: rgba(0,0,0,0.2);
+        }
 
         .leaderboard-loading {
             text-align: center;
@@ -184,7 +294,7 @@
             opacity: 0.7;
         }
 
-        /* Анкета (профиль) */
+        /* ===== АНКЕТА ===== */
         .avatar-container {
             display: flex;
             justify-content: center;
@@ -246,31 +356,10 @@
         }
         .settings-icon:active { transform: scale(0.9); }
 
-        /* Модальное окно настроек */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.7);
-            z-index: 2000;
-            align-items: center;
-            justify-content: center;
-        }
-        .modal.active { display: flex; }
-        .modal-content {
+        /* ===== МОДАЛКА НАСТРОЕК ===== */
+        .settings-modal .modal-content {
             max-width: 320px;
-            width: 80%;
-            background: #1e1e1e;
-            border-radius: 32px;
-            padding: 24px;
-            text-align: center;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.5);
         }
-        body.theme-light .modal-content { background: #ffffff; }
-        .modal-content h3 { margin-bottom: 16px; }
         .theme-buttons {
             display: flex;
             flex-wrap: wrap;
@@ -304,7 +393,7 @@
         .avatar-settings { margin: 16px 0; }
         .close-modal { margin-top: 16px; background: #555; }
 
-        /* Поддержка */
+        /* ===== ПОДДЕРЖКА ===== */
         .support-input, .support-textarea {
             width: 100%;
             padding: 12px;
@@ -314,7 +403,7 @@
             background: rgba(255,255,255,0.1);
         }
 
-        /* ----- ТЕМЫ (общие) ----- */
+        /* ===== ТЕМЫ (общие) ===== */
         body.theme-light {
             background: #f5f5f7;
             color: #1c1c1e;
@@ -334,9 +423,18 @@
             color: #1c1c1e;
             border-color: #ccc;
         }
-        body.theme-light .click-btn {
-            background: #007aff;
-            color: white;
+        body.theme-light .click-circle {
+            background: linear-gradient(145deg, #e0e0e0, #ffffff);
+            color: #1c1c1e;
+            border-color: #ccc;
+        }
+        body.theme-light .leaderboard-btn {
+            color: #1c1c1e;
+            border-color: #ccc;
+        }
+        body.theme-light .modal-content {
+            background: #ffffff;
+            color: #1c1c1e;
         }
         body.theme-light .lang-btn {
             background: #ddd;
@@ -362,9 +460,18 @@
             color: #e0e0e0;
             border-color: #444;
         }
-        body.theme-dark .click-btn {
-            background: #0d6efd;
-            color: white;
+        body.theme-dark .click-circle {
+            background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+            color: #e0e0e0;
+            border-color: #444;
+        }
+        body.theme-dark .leaderboard-btn {
+            color: #e0e0e0;
+            border-color: #444;
+        }
+        body.theme-dark .modal-content {
+            background: #1e1e1e;
+            color: #e0e0e0;
         }
 
         body.theme-purple {
@@ -386,9 +493,18 @@
             color: #e2d6ff;
             border-color: #7a4fa0;
         }
-        body.theme-purple .click-btn {
-            background: #9b59b6;
-            color: white;
+        body.theme-purple .click-circle {
+            background: linear-gradient(145deg, #3a235a, #2a1642);
+            color: #e2d6ff;
+            border-color: #6b3fa0;
+        }
+        body.theme-purple .leaderboard-btn {
+            color: #e2d6ff;
+            border-color: #6b3fa0;
+        }
+        body.theme-purple .modal-content {
+            background: #2a1642;
+            color: #e2d6ff;
         }
 
         body.theme-green {
@@ -410,9 +526,18 @@
             color: #c8f0dc;
             border-color: #3a8a5a;
         }
-        body.theme-green .click-btn {
-            background: #2ecc71;
-            color: #0a2a16;
+        body.theme-green .click-circle {
+            background: linear-gradient(145deg, #1e5a36, #164e2c);
+            color: #c8f0dc;
+            border-color: #2e8b57;
+        }
+        body.theme-green .leaderboard-btn {
+            color: #c8f0dc;
+            border-color: #2e8b57;
+        }
+        body.theme-green .modal-content {
+            background: #164e2c;
+            color: #c8f0dc;
         }
 
         body.theme-red {
@@ -434,9 +559,18 @@
             color: #ffd6d6;
             border-color: #b55a5a;
         }
-        body.theme-red .click-btn {
-            background: #e74c3c;
-            color: white;
+        body.theme-red .click-circle {
+            background: linear-gradient(145deg, #5e2a2a, #4e1c1c);
+            color: #ffd6d6;
+            border-color: #bf4b4b;
+        }
+        body.theme-red .leaderboard-btn {
+            color: #ffd6d6;
+            border-color: #bf4b4b;
+        }
+        body.theme-red .modal-content {
+            background: #4e1c1c;
+            color: #ffd6d6;
         }
 
         body.theme-blue {
@@ -458,9 +592,18 @@
             color: #cfe3ff;
             border-color: #5a8ac0;
         }
-        body.theme-blue .click-btn {
-            background: #3b82f6;
-            color: white;
+        body.theme-blue .click-circle {
+            background: linear-gradient(145deg, #1e3a6e, #1a2f5c);
+            color: #cfe3ff;
+            border-color: #3a6ea5;
+        }
+        body.theme-blue .leaderboard-btn {
+            color: #cfe3ff;
+            border-color: #3a6ea5;
+        }
+        body.theme-blue .modal-content {
+            background: #1a2f5c;
+            color: #cfe3ff;
         }
     </style>
 </head>
@@ -468,20 +611,19 @@
     <div class="toast" id="toast"></div>
 
     <!-- Вкладка: Игра (кликер) -->
-    <div id="gamePage" class="page">
+    <div id="gamePage" class="page active">
         <div class="container">
             <div class="card">
                 <h2 id="gameTitle">🖱️ Кликер</h2>
-                <div class="click-area">
-                    <div id="gameScore" class="score-display">0</div>
-                    <button class="click-btn" id="clickBtn">👆 КЛИК</button>
-                    <p style="margin-top: 12px; font-size: 14px; opacity: 0.7;" id="gameClicksInfo">Кликов: 0</p>
-                </div>
-            </div>
-            <div class="card">
-                <h3 id="leaderboardTitle">🏆 Лидерборд</h3>
-                <div id="leaderboardContainer">
-                    <div class="leaderboard-loading">Загрузка...</div>
+                <div class="game-area">
+                    <!-- Круглая кнопка-кликер -->
+                    <div class="click-circle" id="clickCircle">
+                        <div class="click-effect" id="clickEffect"></div>
+                        <span class="score-number" id="gameScore">0</span>
+                        <span class="score-label" id="scoreLabel">очков</span>
+                    </div>
+                    <!-- Кнопка открытия лидерборда -->
+                    <button class="leaderboard-btn" id="leaderboardOpenBtn">🏆 Лидерборд</button>
                 </div>
             </div>
         </div>
@@ -517,9 +659,41 @@
         </div>
     </div>
 
+    <!-- Модальное окно лидерборда -->
+    <div class="modal-overlay" id="leaderboardModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🏆 Лидерборд</h3>
+                <button class="modal-close" id="leaderboardCloseBtn">✕</button>
+            </div>
+            <div id="leaderboardContainer">
+                <div class="leaderboard-loading">Загрузка...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно настроек -->
+    <div class="modal-overlay settings-modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>⚙️ Настройки</h3>
+                <button class="modal-close" id="settingsCloseBtn">✕</button>
+            </div>
+            <div class="theme-buttons" id="themeButtons"></div>
+            <div class="lang-buttons">
+                <button class="lang-btn" data-lang="ru">🇷🇺 Русский</button>
+                <button class="lang-btn" data-lang="en">🇬🇧 English</button>
+            </div>
+            <div class="avatar-settings">
+                <label>🖼️ Аватар профиля</label>
+                <input type="file" id="modalAvatarInput" accept="image/*" style="margin-top: 8px; width: 100%;">
+            </div>
+        </div>
+    </div>
+
     <!-- Нижний таб-бар (3 пункта) -->
     <div class="tab-bar">
-        <div class="tab-item" data-tab="game">
+        <div class="tab-item active" data-tab="game">
             <div class="tab-icon">🎮</div>
             <div class="tab-label" id="tabGameLabel">Игра</div>
         </div>
@@ -530,23 +704,6 @@
         <div class="tab-item" data-tab="support">
             <div class="tab-icon">🛠️</div>
             <div class="tab-label" id="tabSupportLabel">Поддержка</div>
-        </div>
-    </div>
-
-    <!-- Модальное окно настроек -->
-    <div id="settingsModal" class="modal">
-        <div class="modal-content">
-            <h3>⚙️ Настройки</h3>
-            <div class="theme-buttons" id="themeButtons"></div>
-            <div class="lang-buttons">
-                <button class="lang-btn" data-lang="ru">🇷🇺 Русский</button>
-                <button class="lang-btn" data-lang="en">🇬🇧 English</button>
-            </div>
-            <div class="avatar-settings">
-                <label>🖼️ Аватар профиля</label>
-                <input type="file" id="modalAvatarInput" accept="image/*" style="margin-top: 8px; width: 100%;">
-            </div>
-            <button class="btn close-modal" id="closeModalBtn">Закрыть</button>
         </div>
     </div>
 
@@ -607,8 +764,8 @@
                 tabProfile: 'Анкета',
                 tabSupport: 'Поддержка',
                 gameTitle: '🖱️ Кликер',
+                scoreLabel: 'очков',
                 leaderboardTitle: '🏆 Лидерборд',
-                gameClicksInfo: 'Кликов: ',
                 supportTitle: '🛠️ Поддержка',
                 supportSubjectPlaceholder: 'Тема',
                 supportMessagePlaceholder: 'Сообщение',
@@ -624,15 +781,16 @@
                 clickError: 'Ошибка, попробуйте позже',
                 leaderboardEmpty: 'Пока ни одного клика... Стань первым!',
                 loading: 'Загрузка...',
-                you: ' (Вы)'
+                you: ' (Вы)',
+                leaderboardBtn: '🏆 Лидерборд'
             },
             en: {
                 tabGame: 'Game',
                 tabProfile: 'Profile',
                 tabSupport: 'Support',
                 gameTitle: '🖱️ Clicker',
+                scoreLabel: 'points',
                 leaderboardTitle: '🏆 Leaderboard',
-                gameClicksInfo: 'Clicks: ',
                 supportTitle: '🛠️ Support',
                 supportSubjectPlaceholder: 'Subject',
                 supportMessagePlaceholder: 'Message',
@@ -648,7 +806,8 @@
                 clickError: 'Error, please try again',
                 leaderboardEmpty: 'No clicks yet... Be the first!',
                 loading: 'Loading...',
-                you: ' (You)'
+                you: ' (You)',
+                leaderboardBtn: '🏆 Leaderboard'
             }
         };
 
@@ -660,8 +819,8 @@
             document.getElementById('tabProfileLabel').innerText = t.tabProfile;
             document.getElementById('tabSupportLabel').innerText = t.tabSupport;
             document.getElementById('gameTitle').innerText = t.gameTitle;
-            document.getElementById('leaderboardTitle').innerText = t.leaderboardTitle;
-            document.getElementById('gameClicksInfo').innerHTML = t.gameClicksInfo + '<span id="clickCount">0</span>';
+            document.getElementById('scoreLabel').innerText = t.scoreLabel;
+            document.getElementById('leaderboardOpenBtn').innerText = t.leaderboardBtn;
             document.getElementById('supportTitle').innerText = t.supportTitle;
             document.getElementById('supportSubject').placeholder = t.supportSubjectPlaceholder;
             document.getElementById('supportMessage').placeholder = t.supportMessagePlaceholder;
@@ -670,10 +829,10 @@
             document.getElementById('labelFirstName').innerHTML = t.labelFirstName;
             document.getElementById('labelBio').innerHTML = t.labelBio;
             document.getElementById('bioInput').placeholder = t.bioPlaceholder;
+            // Обновляем заголовок в модалке лидерборда
+            document.querySelector('#leaderboardModal .modal-header h3').innerText = t.leaderboardTitle;
             localStorage.setItem('selectedLang', lang);
             currentLang = lang;
-            // Перезагружаем лидерборд с новым языком
-            loadLeaderboard();
         }
 
         // --- Темы (6 цветов) ---
@@ -703,34 +862,30 @@
             applyTheme(idx);
         }
 
-        // --- Игра (кликер) ---
+        // ==================== ИГРА (кликер) ====================
         let currentScore = 0;
+        let isClicking = false;
+        const clickCircle = document.getElementById('clickCircle');
         const scoreDisplay = document.getElementById('gameScore');
-        const clickBtn = document.getElementById('clickBtn');
-        const clickCountSpan = document.getElementById('clickCount');
+        const clickEffect = document.getElementById('clickEffect');
 
-        async function loadGameData() {
-            // Загружаем текущий счёт пользователя через лидерборд
-            try {
-                const res = await fetch('/api/leaderboard');
-                const data = await res.json();
-                if (data && data.length > 0) {
-                    const myEntry = data.find(entry => entry.username === (user.username || 'anon'));
-                    if (myEntry) {
-                        currentScore = myEntry.score;
-                        scoreDisplay.innerText = currentScore;
-                        if (clickCountSpan) clickCountSpan.innerText = currentScore;
-                    }
-                }
-                renderLeaderboard(data);
-            } catch (e) {
-                console.error('Load game data error:', e);
-            }
+        // Анимация клика
+        function playClickAnimation() {
+            clickEffect.classList.remove('active');
+            void clickEffect.offsetWidth; // рефлоу для перезапуска анимации
+            clickEffect.classList.add('active');
+            // Небольшая вибрация на мобильных
+            if (navigator.vibrate) navigator.vibrate(10);
         }
 
+        // Отправка клика на сервер
         async function handleClick() {
+            if (isClicking) return;
             if (!user) return;
-            clickBtn.disabled = true;
+
+            isClicking = true;
+            playClickAnimation();
+
             try {
                 const res = await fetch('/api/click', {
                     method: 'POST',
@@ -744,9 +899,6 @@
                 if (data.success) {
                     currentScore = data.score;
                     scoreDisplay.innerText = currentScore;
-                    if (clickCountSpan) clickCountSpan.innerText = currentScore;
-                    // Обновляем лидерборд
-                    await loadLeaderboard();
                 } else {
                     showToast(translations[currentLang].clickError);
                 }
@@ -754,11 +906,40 @@
                 console.error('Click error:', e);
                 showToast(translations[currentLang].clickError);
             }
-            clickBtn.disabled = false;
+            isClicking = false;
         }
 
+        // Загрузка данных игры
+        async function loadGameData() {
+            try {
+                const res = await fetch('/api/leaderboard');
+                const data = await res.json();
+                if (data && data.length > 0) {
+                    const myEntry = data.find(entry => entry.username === (user.username || 'anon'));
+                    if (myEntry) {
+                        currentScore = myEntry.score;
+                        scoreDisplay.innerText = currentScore;
+                    }
+                }
+            } catch (e) {
+                console.error('Load game data error:', e);
+            }
+        }
+
+        // События клика по кругу (мышь и тач)
+        clickCircle.addEventListener('click', handleClick);
+        clickCircle.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            handleClick();
+        });
+
+        // ==================== ЛИДЕРБОРД (модальное окно) ====================
+        const leaderboardModal = document.getElementById('leaderboardModal');
+        const leaderboardOpenBtn = document.getElementById('leaderboardOpenBtn');
+        const leaderboardCloseBtn = document.getElementById('leaderboardCloseBtn');
+        const leaderboardContainer = document.getElementById('leaderboardContainer');
+
         async function loadLeaderboard() {
-            const container = document.getElementById('leaderboardContainer');
             const t = translations[currentLang];
             try {
                 const res = await fetch('/api/leaderboard');
@@ -766,15 +947,14 @@
                 renderLeaderboard(data);
             } catch (e) {
                 console.error('Leaderboard error:', e);
-                container.innerHTML = `<div class="leaderboard-loading">${t.loading}</div>`;
+                leaderboardContainer.innerHTML = `<div class="leaderboard-loading">${t.loading}</div>`;
             }
         }
 
         function renderLeaderboard(players) {
-            const container = document.getElementById('leaderboardContainer');
             const t = translations[currentLang];
             if (!players || players.length === 0) {
-                container.innerHTML = `<div class="leaderboard-loading">${t.leaderboardEmpty}</div>`;
+                leaderboardContainer.innerHTML = `<div class="leaderboard-loading">${t.leaderboardEmpty}</div>`;
                 return;
             }
             let html = '<ul class="leaderboard-list">';
@@ -787,153 +967,4 @@
                 if (rank === 3) cls += ' top3';
                 if (isMe) cls += ' me';
                 const nameDisplay = p.username || 'anon';
-                html += `
-                    <li class="${cls}">
-                        <span class="rank">#${rank}</span>
-                        <span class="name">${nameDisplay}${isMe ? ' ' + t.you : ''}</span>
-                        <span class="score">${p.score}</span>
-                    </li>
-                `;
-            });
-            html += '</ul>';
-            container.innerHTML = html;
-        }
-
-        clickBtn.addEventListener('click', handleClick);
-
-        // --- Аватар ---
-        let currentAvatarBase64 = localStorage.getItem('userAvatar') || null;
-        function renderAvatar() {
-            const container = document.getElementById('avatarContainer');
-            if (!container) return;
-            container.innerHTML = '';
-            if (currentAvatarBase64) {
-                const img = document.createElement('img');
-                img.src = currentAvatarBase64;
-                img.className = 'avatar';
-                img.alt = 'avatar';
-                container.appendChild(img);
-            } else {
-                const placeholder = document.createElement('div');
-                placeholder.className = 'avatar-placeholder';
-                const firstLetter = (user.first_name ? user.first_name.charAt(0) : '?').toUpperCase();
-                placeholder.textContent = firstLetter;
-                container.appendChild(placeholder);
-            }
-        }
-        function saveAvatar(base64) {
-            currentAvatarBase64 = base64;
-            localStorage.setItem('userAvatar', base64 || '');
-            renderAvatar();
-            const t = translations[currentLang];
-            showToast(t.toastAvatarUpdated || 'Аватар обновлён');
-        }
-
-        // --- Профиль: описание ---
-        const bioInput = document.getElementById('bioInput');
-        let userBio = localStorage.getItem('userBio') || '';
-        bioInput.value = userBio;
-        bioInput.addEventListener('input', () => {
-            userBio = bioInput.value;
-            localStorage.setItem('userBio', userBio);
-        });
-        document.getElementById('tgUsername').textContent = user.username || '—';
-        document.getElementById('tgFirstName').textContent = `${user.first_name || ''} ${user.last_name || ''}`.trim() || '—';
-
-        // --- Модальное окно настроек ---
-        const modal = document.getElementById('settingsModal');
-        const settingsIcon = document.getElementById('settingsIcon');
-        const closeModalBtn = document.getElementById('closeModalBtn');
-        const themeButtonsContainer = document.getElementById('themeButtons');
-        const modalAvatarInput = document.getElementById('modalAvatarInput');
-
-        function openModal() {
-            modal.classList.add('active');
-            themeButtonsContainer.innerHTML = '';
-            themes.forEach((theme, idx) => {
-                const dot = document.createElement('div');
-                dot.className = 'theme-dot';
-                dot.style.backgroundColor = theme.color;
-                dot.style.border = idx === currentThemeIndex ? '3px solid white' : '2px solid rgba(255,255,255,0.3)';
-                dot.addEventListener('click', () => {
-                    applyTheme(idx);
-                    document.querySelectorAll('.theme-dot').forEach(d => d.style.border = '2px solid rgba(255,255,255,0.3)');
-                    dot.style.border = '3px solid white';
-                });
-                themeButtonsContainer.appendChild(dot);
-            });
-        }
-        function closeModal() {
-            modal.classList.remove('active');
-        }
-        settingsIcon.addEventListener('click', openModal);
-        closeModalBtn.addEventListener('click', closeModal);
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) closeModal();
-        });
-        document.querySelectorAll('.lang-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const lang = btn.dataset.lang;
-                applyLanguage(lang);
-            });
-        });
-        modalAvatarInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file && file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onload = (ev) => saveAvatar(ev.target.result);
-                reader.readAsDataURL(file);
-            } else {
-                showToast('Выберите изображение');
-            }
-        });
-
-        // --- Поддержка: отправка ---
-        document.getElementById('sendSupportBtn').addEventListener('click', async () => {
-            const subject = document.getElementById('supportSubject').value;
-            const message = document.getElementById('supportMessage').value;
-            const t = translations[currentLang];
-            if (!subject.trim() || !message.trim()) {
-                showToast(t.supportSubjectPlaceholder === 'Тема' ? 'Заполните тему и сообщение' : 'Fill subject and message');
-                return;
-            }
-            const sendBtn = document.getElementById('sendSupportBtn');
-            sendBtn.disabled = true;
-            sendBtn.innerText = '⏳ ...';
-            try {
-                const res = await fetch('/api/support', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        subject: subject.trim(),
-                        message: message.trim(),
-                        userId: user.id,
-                        username: user.username,
-                        firstName: user.first_name
-                    })
-                });
-                const data = await res.json();
-                if (res.ok) {
-                    showToast(t.supportSent);
-                    document.getElementById('supportSubject').value = '';
-                    document.getElementById('supportMessage').value = '';
-                } else {
-                    showToast(data.error || 'Ошибка отправки');
-                }
-            } catch (e) {
-                showToast('Ошибка соединения');
-            }
-            sendBtn.disabled = false;
-            sendBtn.innerText = t.supportSendBtn;
-        });
-
-        // --- Инициализация ---
-        loadSavedTheme();
-        applyLanguage(currentLang);
-        renderAvatar();
-        const lastTab = localStorage.getItem('lastTab');
-        if (lastTab && pages[lastTab]) showTab(lastTab);
-        else showTab('game');
-    </script>
-</body>
-</html>
+                html
