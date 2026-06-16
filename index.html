@@ -36,7 +36,6 @@
             white-space: nowrap;
         }
         .toast.show { opacity: 1; }
-        /* Стиль для мемных фраз – ярче, крупнее, с эмодзи */
         .toast.meme {
             background: linear-gradient(135deg, #f7971e, #ffd200);
             color: #1a1a2e;
@@ -388,7 +387,6 @@
             background: rgba(255,255,255,0.1);
         }
 
-        /* Анимация "+1" */
         .float-text {
             position: fixed;
             pointer-events: none;
@@ -721,53 +719,50 @@
             }, 3000);
         }
 
-        // ===== МЕМНЫЕ ФРАЗЫ =====
+        // ===== МЕМНЫЕ ФРАЗЫ (каждые 500 кликов, для студентов) =====
         const memePhrases = [
-            "🎉 1000 кликов! Ты безработный?",
-            "🤯 2000! Погоди, ты серьёзно?",
-            "😎 3000! А ты норм?",
-            "🔥 4000! Ты робот?",
-            "💪 5000! Поставь телефон, отдохни",
-            "🚀 6000! Клик-клик-клик",
-            "🤑 7000! Богатей на кликах!",
-            "🤪 8000! Ты сумасшедший!",
-            "🏆 9000! Почти легенда!",
-            "👑 10000! Король кликеров!",
-            "🐱 11000! Кот одобряет",
-            "🍕 12000! Купи пиццу, ты заслужил",
-            "💀 13000! Твои пальцы горят?",
-            "🎈 14000! Поздравляю, ты клик-машина",
-            "⚡ 15000! Молния! Ты быстрее света!",
-            "🌟 16000! Звезда! Ты сияешь!",
-            "🍻 17000! Выпьем за твои клики!",
-            "🎵 18000! Танцуй, пока кликаешь!",
-            "🌈 19000! Радуга кликов!",
-            "🔥 20000! Двадцатка! Ты огонь!"
+            "🤣 500 кликов! Ты чё, ебень, пары прогулял?",
+            "😅 1000! Братан, иди приляг и поспи)",
+            "😂 1500! Заебал дрочить, иди подыши",
+            "🥴 2000! Займись жизнью, а не хуйней",
+            "😎 2500! А ты в шараге вообще был?",
+            "🤓 3000! Так, хватит, иди работай!",
+            "😜 3500! Смирнова начала за тобой охоту",
+            "🤪 4000! Чет мало, давай больше",
+            "😏 4500! Как ты заебал...",
+            "😁 5000! Миша, всё хуйня, давай по-новой",
+            "😱 5500! Че, заняться нечем?",
+            "😤 6000! Щенок, заебал ты уже тапать",
+            "😆 6500! Спасибо, теперь сходи нахуй, нищий выблядок",
+            "😅 7000! Ты серьёзно? У тебя ничего не получится)",
+            "🤣 7500! Ещё 2500 и ты будешь забанен!",
+            "😎 8000! Поздравляю, всем похуй",
+            "🤓 8500! Твои пальцы — хуйня",
+            "😜 9000! Бля, ебать ты ебень нахуй...",
+            "🤪 9500! Смирнова уже рядом......",
+            "🔥 10000! Спасибо, теперь сходи нахуй, нищий выблядок"
         ];
 
         // ===== ИГРА =====
         let currentScore = 0;
-        let nextMilestone = 1000; // следующий порог для мемной фразы
+        let nextMilestone = 500; // теперь каждые 500
         const clickCircle = document.getElementById('clickCircle');
         const scoreDisplay = document.getElementById('gameScore');
         const clickEffect = document.getElementById('clickEffect');
 
         function showMilestoneMessage(milestone) {
-            const idx = Math.floor(milestone / 1000) - 1; // 1000 -> индекс 0, 2000 -> 1, ...
+            // индекс = (milestone / 500) - 1, но для первого 500 -> 0, 1000 -> 1, ...
+            const idx = Math.floor(milestone / 500) - 1;
             const phrase = memePhrases[idx % memePhrases.length];
-            // Добавляем смайлик и число, если фраза не начинается с эмодзи
-            const finalMessage = phrase || `🎊 ${milestone} кликов! Ты крут!`;
-            showToast(finalMessage, true);
+            showToast(phrase, true);
         }
 
         function updateScore(newValue) {
             if (newValue > currentScore) {
-                // Проверяем, не перескочили ли мы через несколько милстоунов
-                let milestone = nextMilestone;
-                while (milestone <= newValue) {
-                    showMilestoneMessage(milestone);
-                    nextMilestone += 1000;
-                    milestone = nextMilestone;
+                // Проверяем все пороги, которые могли быть перескочены
+                while (nextMilestone <= newValue) {
+                    showMilestoneMessage(nextMilestone);
+                    nextMilestone += 500;
                 }
                 currentScore = newValue;
                 scoreDisplay.innerText = currentScore;
@@ -830,11 +825,10 @@
             }
             showFloatingText(clientX, clientY);
 
-            // Увеличиваем счёт и обрабатываем милстоуны
             const newScore = currentScore + 1;
             updateScore(newScore);
             playClickAnimation();
-            syncScore(); // асинхронно
+            syncScore();
         }
 
         clickCircle.addEventListener('click', handleClick);
@@ -850,13 +844,12 @@
                 if (data && data.length > 0) {
                     const myEntry = data.find(entry => entry.username === (user.username || 'anon'));
                     if (myEntry) {
-                        // Обновляем счёт, но без показа мемных фраз при загрузке
-                        // Просто устанавливаем значение без вызова updateScore (чтобы не спамить фразами)
+                        // Устанавливаем счёт без вызова мемных фраз
                         if (myEntry.score > currentScore) {
                             currentScore = myEntry.score;
                             scoreDisplay.innerText = currentScore;
                             // Пересчитываем nextMilestone, чтобы он был больше текущего счёта
-                            nextMilestone = Math.floor(currentScore / 1000) * 1000 + 1000;
+                            nextMilestone = Math.floor(currentScore / 500) * 500 + 500;
                         }
                     }
                 }
@@ -931,7 +924,7 @@
             if (e.target === leaderboardModal) leaderboardModal.classList.remove('active');
         });
 
-        // ===== ЯЗЫКИ (переводы) =====
+        // ===== ЯЗЫКИ =====
         const translations = {
             ru: {
                 tabGame: 'Игра',
@@ -1177,10 +1170,10 @@
         (async function init() {
             await loadGameData();
             // Убедимся, что nextMilestone настроен правильно
-            nextMilestone = Math.floor(currentScore / 1000) * 1000 + 1000;
+            nextMilestone = Math.floor(currentScore / 500) * 500 + 500;
             await syncScore();
             // После синхронизации nextMilestone может измениться, обновим
-            nextMilestone = Math.floor(currentScore / 1000) * 1000 + 1000;
+            nextMilestone = Math.floor(currentScore / 500) * 500 + 500;
         })();
     </script>
 </body>
