@@ -719,7 +719,10 @@
             }, 3000);
         }
 
-        // ===== МЕМНЫЕ ФРАЗЫ (ручной список чисел) =====
+        // ============================================================
+        //  МЕМЫ – РУЧНОЙ СПИСОК (ВАШ)
+        //  Добавляйте / меняйте здесь любые числа и фразы
+        // ============================================================
         const specialMilestones = {
             500: "🤣 500 кликов! Ты чё, ебень, пары прогулял?",
             666: "👺 DEMON! SMIRNOVA?",
@@ -742,7 +745,7 @@
             6000: "😤 6000! Щенок, заебал ты уже тапать!",
             6500: "😆 6500! Смирнова начала за тобой охоту!",
             6767: "6️⃣7️⃣ СИКСЕВЕН! СИКСЕВЕН СИКСЕВЕН СИКСЕВЕН!!",
-            6969: "6️⃣9️⃣ СИКСНААЙН! Радужный поцелуй замутим? :3",
+            6969: "6️⃣9️⃣ СИКСНАЙН! Радужный поцелуй замутим? :3",
             7000: "😅 7000! Ты серьёзно? У тебя ничего не получится)",
             7500: "🤣 7500! Ещё 2500 и ты будешь забанен!",
             8000: "😎 8000! Поздравляю, всем похуй",
@@ -752,7 +755,7 @@
             10000: "🔥 10000! Спасибо, теперь сходи нахуй, нищий выблядок"
         };
 
-        // Получаем отсортированный список чисел
+        // Создаём очередь чисел, для которых ещё не показывали мем
         let pendingMilestones = Object.keys(specialMilestones)
             .map(Number)
             .sort((a, b) => a - b);
@@ -770,7 +773,7 @@
 
         function updateScore(newValue) {
             if (newValue > currentScore) {
-                // Проверяем все ещё не показанные числа
+                // Показываем все мемы, чей порог достигнут или превышен
                 while (pendingMilestones.length > 0 && pendingMilestones[0] <= newValue) {
                     const milestone = pendingMilestones.shift();
                     showMilestoneMessage(milestone);
@@ -857,7 +860,7 @@
                     if (myEntry) {
                         currentScore = myEntry.score;
                         scoreDisplay.innerText = currentScore;
-                        // Удаляем из pending все числа, которые уже пройдены
+                        // Удаляем из очереди все числа, которые уже пройдены
                         while (pendingMilestones.length > 0 && pendingMilestones[0] <= currentScore) {
                             pendingMilestones.shift();
                         }
@@ -868,7 +871,7 @@
             }
         }
 
-        // Периодическая синхронизация
+        // Периодическая синхронизация (каждые 2 секунды)
         setInterval(() => {
             if (currentTab === 'game') {
                 syncScore();
@@ -1179,13 +1182,13 @@
 
         (async function init() {
             await loadGameData();
-            // После загрузки данных удаляем из очереди все уже пройденные числа
+            // Очищаем очередь от чисел, которые уже пройдены
             while (pendingMilestones.length > 0 && pendingMilestones[0] <= currentScore) {
                 pendingMilestones.shift();
             }
-            // Синхронизируемся с сервером (может обновить счёт)
+            // Синхронизация
             await syncScore();
-            // Ещё раз обновим очередь
+            // Ещё раз очищаем после синхронизации
             while (pendingMilestones.length > 0 && pendingMilestones[0] <= currentScore) {
                 pendingMilestones.shift();
             }
