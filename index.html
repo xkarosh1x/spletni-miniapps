@@ -17,10 +17,8 @@
         body {
             padding: 20px 20px 70px 20px;
             min-height: 100vh;
-            overflow-x: hidden;
         }
 
-        /* Тост */
         .toast {
             position: fixed;
             top: 80px;
@@ -41,7 +39,6 @@
         }
         .toast.show { opacity: 1; }
 
-        /* Нижний таб-бар */
         .tab-bar {
             position: fixed;
             bottom: 12px;
@@ -87,7 +84,6 @@
             color: #000;
         }
 
-        /* Страницы */
         .page { display: none; }
         .page.active { display: block; }
 
@@ -115,13 +111,12 @@
             cursor: not-allowed;
         }
 
-        /* ===== ИГРА (кликер) ===== */
+        /* === ИГРА === */
         .game-area {
             text-align: center;
             padding: 10px 0;
         }
 
-        /* Круглая кнопка-кликер */
         .click-circle {
             width: 220px;
             height: 220px;
@@ -138,6 +133,8 @@
             border: 4px solid rgba(255,255,255,0.2);
             transition: transform 0.1s ease;
             box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+            background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+            color: #e0e0e0;
         }
         .click-circle:active {
             transform: scale(0.92);
@@ -153,7 +150,7 @@
             opacity: 0.7;
             margin-top: 4px;
         }
-        .click-circle .click-effect {
+        .click-effect {
             position: absolute;
             width: 100%;
             height: 100%;
@@ -162,9 +159,8 @@
             background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
             opacity: 0;
             transform: scale(1);
-            transition: none;
         }
-        .click-circle .click-effect.active {
+        .click-effect.active {
             animation: clickRipple 0.3s ease-out forwards;
         }
 
@@ -173,7 +169,6 @@
             100% { opacity: 0; transform: scale(1.8); }
         }
 
-        /* Кнопка "Лидерборд" */
         .leaderboard-btn {
             margin-top: 16px;
             padding: 12px 24px;
@@ -184,6 +179,7 @@
             font-weight: 600;
             font-size: 16px;
             transition: 0.15s;
+            color: #e0e0e0;
         }
         .leaderboard-btn:hover {
             background: rgba(255,255,255,0.1);
@@ -192,7 +188,7 @@
             transform: scale(0.95);
         }
 
-        /* ===== МОДАЛЬНОЕ ОКНО ЛИДЕРБОРДА ===== */
+        /* === МОДАЛКА ЛИДЕРБОРДА === */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -219,9 +215,11 @@
             box-shadow: 0 8px 40px rgba(0,0,0,0.5);
             overflow-y: auto;
             position: relative;
+            color: #e0e0e0;
         }
         body.theme-light .modal-content {
             background: #ffffff;
+            color: #1c1c1e;
         }
 
         .modal-header {
@@ -281,8 +279,7 @@
         .leaderboard-item.top2 { background: rgba(192,192,192,0.2); }
         .leaderboard-item.top3 { background: rgba(205,127,50,0.2); }
         .leaderboard-item.me {
-            border: 1px solid currentColor;
-            border-color: rgba(255,255,255,0.3);
+            border: 1px solid rgba(255,255,255,0.3);
         }
         body.theme-light .leaderboard-item.me {
             border-color: rgba(0,0,0,0.2);
@@ -294,7 +291,7 @@
             opacity: 0.7;
         }
 
-        /* ===== АНКЕТА ===== */
+        /* === АНКЕТА === */
         .avatar-container {
             display: flex;
             justify-content: center;
@@ -356,7 +353,7 @@
         }
         .settings-icon:active { transform: scale(0.9); }
 
-        /* ===== МОДАЛКА НАСТРОЕК ===== */
+        /* === МОДАЛКА НАСТРОЕК === */
         .settings-modal .modal-content {
             max-width: 320px;
         }
@@ -390,10 +387,13 @@
             color: white;
             border: none;
         }
+        body.theme-light .lang-btn {
+            background: #ddd;
+            color: #1c1c1e;
+        }
         .avatar-settings { margin: 16px 0; }
-        .close-modal { margin-top: 16px; background: #555; }
 
-        /* ===== ПОДДЕРЖКА ===== */
+        /* === ПОДДЕРЖКА === */
         .support-input, .support-textarea {
             width: 100%;
             padding: 12px;
@@ -403,7 +403,7 @@
             background: rgba(255,255,255,0.1);
         }
 
-        /* ===== ТЕМЫ (общие) ===== */
+        /* === ТЕМЫ (общие цвета) === */
         body.theme-light {
             background: #f5f5f7;
             color: #1c1c1e;
@@ -431,14 +431,6 @@
         body.theme-light .leaderboard-btn {
             color: #1c1c1e;
             border-color: #ccc;
-        }
-        body.theme-light .modal-content {
-            background: #ffffff;
-            color: #1c1c1e;
-        }
-        body.theme-light .lang-btn {
-            background: #ddd;
-            color: #1c1c1e;
         }
 
         body.theme-dark {
@@ -469,10 +461,6 @@
             color: #e0e0e0;
             border-color: #444;
         }
-        body.theme-dark .modal-content {
-            background: #1e1e1e;
-            color: #e0e0e0;
-        }
 
         body.theme-purple {
             background: #17092b;
@@ -501,10 +489,6 @@
         body.theme-purple .leaderboard-btn {
             color: #e2d6ff;
             border-color: #6b3fa0;
-        }
-        body.theme-purple .modal-content {
-            background: #2a1642;
-            color: #e2d6ff;
         }
 
         body.theme-green {
@@ -535,10 +519,6 @@
             color: #c8f0dc;
             border-color: #2e8b57;
         }
-        body.theme-green .modal-content {
-            background: #164e2c;
-            color: #c8f0dc;
-        }
 
         body.theme-red {
             background: #2b0c0c;
@@ -567,10 +547,6 @@
         body.theme-red .leaderboard-btn {
             color: #ffd6d6;
             border-color: #bf4b4b;
-        }
-        body.theme-red .modal-content {
-            background: #4e1c1c;
-            color: #ffd6d6;
         }
 
         body.theme-blue {
@@ -601,35 +577,29 @@
             color: #cfe3ff;
             border-color: #3a6ea5;
         }
-        body.theme-blue .modal-content {
-            background: #1a2f5c;
-            color: #cfe3ff;
-        }
     </style>
 </head>
 <body>
     <div class="toast" id="toast"></div>
 
-    <!-- Вкладка: Игра (кликер) -->
+    <!-- Вкладка: Игра -->
     <div id="gamePage" class="page active">
         <div class="container">
             <div class="card">
                 <h2 id="gameTitle">🖱️ Кликер</h2>
                 <div class="game-area">
-                    <!-- Круглая кнопка-кликер -->
                     <div class="click-circle" id="clickCircle">
                         <div class="click-effect" id="clickEffect"></div>
                         <span class="score-number" id="gameScore">0</span>
                         <span class="score-label" id="scoreLabel">очков</span>
                     </div>
-                    <!-- Кнопка открытия лидерборда -->
                     <button class="leaderboard-btn" id="leaderboardOpenBtn">🏆 Лидерборд</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Вкладка: Анкета (профиль) -->
+    <!-- Вкладка: Анкета -->
     <div id="profilePage" class="page">
         <div class="container">
             <div class="card" style="position: relative;">
@@ -659,7 +629,7 @@
         </div>
     </div>
 
-    <!-- Модальное окно лидерборда -->
+    <!-- Модалка лидерборда -->
     <div class="modal-overlay" id="leaderboardModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -672,7 +642,7 @@
         </div>
     </div>
 
-    <!-- Модальное окно настроек -->
+    <!-- Модалка настроек -->
     <div class="modal-overlay settings-modal" id="settingsModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -691,7 +661,7 @@
         </div>
     </div>
 
-    <!-- Нижний таб-бар (3 пункта) -->
+    <!-- Таб-бар -->
     <div class="tab-bar">
         <div class="tab-item active" data-tab="game">
             <div class="tab-icon">🎮</div>
@@ -708,7 +678,6 @@
     </div>
 
     <script>
-        // --- Telegram WebApp и данные пользователя ---
         const tg = window.Telegram.WebApp;
         tg.expand();
         tg.MainButton.hide();
@@ -718,7 +687,7 @@
             user = { id: 123456, first_name: "Игрок", last_name: "", username: "pixel_player" };
         }
 
-        // --- Элементы табов ---
+        // --- Переключение табов ---
         const pages = {
             game: document.getElementById('gamePage'),
             profile: document.getElementById('profilePage'),
@@ -745,6 +714,7 @@
         // --- Тост ---
         const toast = document.getElementById('toast');
         let toastTimeout = null;
+
         function showToast(message) {
             if (toastTimeout) clearTimeout(toastTimeout);
             toast.classList.remove('show');
@@ -757,7 +727,7 @@
             }, 1500);
         }
 
-        // --- Языки и переводы ---
+        // --- Языки ---
         const translations = {
             ru: {
                 tabGame: 'Игра',
@@ -812,6 +782,7 @@
         };
 
         let currentLang = localStorage.getItem('selectedLang') || 'ru';
+
         function applyLanguage(lang) {
             const t = translations[lang];
             if (!t) return;
@@ -829,20 +800,19 @@
             document.getElementById('labelFirstName').innerHTML = t.labelFirstName;
             document.getElementById('labelBio').innerHTML = t.labelBio;
             document.getElementById('bioInput').placeholder = t.bioPlaceholder;
-            // Обновляем заголовок в модалке лидерборда
             document.querySelector('#leaderboardModal .modal-header h3').innerText = t.leaderboardTitle;
             localStorage.setItem('selectedLang', lang);
             currentLang = lang;
         }
 
-        // --- Темы (6 цветов) ---
+        // --- Темы ---
         const themes = [
-            { id: 'light',  name: 'Светлая',  color: '#f1c40f' },
-            { id: 'dark',   name: 'Тёмная',   color: '#9ca3af' },
+            { id: 'light', name: 'Светлая', color: '#f1c40f' },
+            { id: 'dark', name: 'Тёмная', color: '#9ca3af' },
             { id: 'purple', name: 'Фиолетовая', color: '#cd9eff' },
-            { id: 'green',  name: 'Зелёная',  color: '#7bed9f' },
-            { id: 'red',    name: 'Красная',  color: '#ff8a7a' },
-            { id: 'blue',   name: 'Синяя',    color: '#6aa9ff' }
+            { id: 'green', name: 'Зелёная', color: '#7bed9f' },
+            { id: 'red', name: 'Красная', color: '#ff8a7a' },
+            { id: 'blue', name: 'Синяя', color: '#6aa9ff' }
         ];
         let currentThemeIndex = 1;
 
@@ -855,6 +825,7 @@
             const t = translations[currentLang];
             showToast((t.toastThemeChanged || 'Тема: ') + theme.name);
         }
+
         function loadSavedTheme() {
             const saved = localStorage.getItem('selectedThemeIndex');
             let idx = (saved !== null && !isNaN(parseInt(saved))) ? parseInt(saved) : 1;
@@ -862,30 +833,22 @@
             applyTheme(idx);
         }
 
-        // ==================== ИГРА (кликер) ====================
+        // --- ИГРА ---
         let currentScore = 0;
-        let isClicking = false;
         const clickCircle = document.getElementById('clickCircle');
         const scoreDisplay = document.getElementById('gameScore');
         const clickEffect = document.getElementById('clickEffect');
 
-        // Анимация клика
         function playClickAnimation() {
             clickEffect.classList.remove('active');
-            void clickEffect.offsetWidth; // рефлоу для перезапуска анимации
+            void clickEffect.offsetWidth;
             clickEffect.classList.add('active');
-            // Небольшая вибрация на мобильных
             if (navigator.vibrate) navigator.vibrate(10);
         }
 
-        // Отправка клика на сервер
         async function handleClick() {
-            if (isClicking) return;
             if (!user) return;
-
-            isClicking = true;
             playClickAnimation();
-
             try {
                 const res = await fetch('/api/click', {
                     method: 'POST',
@@ -906,10 +869,15 @@
                 console.error('Click error:', e);
                 showToast(translations[currentLang].clickError);
             }
-            isClicking = false;
         }
 
-        // Загрузка данных игры
+        // События клика (работает быстро, без блокировки)
+        clickCircle.addEventListener('click', handleClick);
+        clickCircle.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            handleClick();
+        });
+
         async function loadGameData() {
             try {
                 const res = await fetch('/api/leaderboard');
@@ -926,14 +894,7 @@
             }
         }
 
-        // События клика по кругу (мышь и тач)
-        clickCircle.addEventListener('click', handleClick);
-        clickCircle.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            handleClick();
-        });
-
-        // ==================== ЛИДЕРБОРД (модальное окно) ====================
+        // --- ЛИДЕРБОРД (модалка) ---
         const leaderboardModal = document.getElementById('leaderboardModal');
         const leaderboardOpenBtn = document.getElementById('leaderboardOpenBtn');
         const leaderboardCloseBtn = document.getElementById('leaderboardCloseBtn');
@@ -967,4 +928,61 @@
                 if (rank === 3) cls += ' top3';
                 if (isMe) cls += ' me';
                 const nameDisplay = p.username || 'anon';
-                html
+                html += `
+                    <li class="${cls}">
+                        <span class="rank">#${rank}</span>
+                        <span class="name">${nameDisplay}${isMe ? t.you : ''}</span>
+                        <span class="score">${p.score}</span>
+                    </li>
+                `;
+            });
+            html += '</ul>';
+            leaderboardContainer.innerHTML = html;
+        }
+
+        leaderboardOpenBtn.addEventListener('click', () => {
+            leaderboardModal.classList.add('active');
+            loadLeaderboard();
+        });
+
+        leaderboardCloseBtn.addEventListener('click', () => {
+            leaderboardModal.classList.remove('active');
+        });
+
+        leaderboardModal.addEventListener('click', (e) => {
+            if (e.target === leaderboardModal) leaderboardModal.classList.remove('active');
+        });
+
+        // --- АВАТАР ---
+        let currentAvatarBase64 = localStorage.getItem('userAvatar') || null;
+
+        function renderAvatar() {
+            const container = document.getElementById('avatarContainer');
+            if (!container) return;
+            container.innerHTML = '';
+            if (currentAvatarBase64) {
+                const img = document.createElement('img');
+                img.src = currentAvatarBase64;
+                img.className = 'avatar';
+                img.alt = 'avatar';
+                container.appendChild(img);
+            } else {
+                const placeholder = document.createElement('div');
+                placeholder.className = 'avatar-placeholder';
+                const firstLetter = (user.first_name ? user.first_name.charAt(0) : '?').toUpperCase();
+                placeholder.textContent = firstLetter;
+                container.appendChild(placeholder);
+            }
+        }
+
+        function saveAvatar(base64) {
+            currentAvatarBase64 = base64;
+            localStorage.setItem('userAvatar', base64 || '');
+            renderAvatar();
+            const t = translations[currentLang];
+            showToast(t.toastAvatarUpdated || 'Аватар обновлён');
+        }
+
+        // --- ПРОФИЛЬ ---
+        const bioInput = document.getElementById('bioInput');
+        let userBio = localStorage
