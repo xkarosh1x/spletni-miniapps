@@ -13,12 +13,10 @@
             transition: background-color 0.2s, color 0.2s;
             font-family: 'Courier New', 'Lucida Console', 'Monaco', monospace !important;
         }
-
         body {
             padding: 20px 20px 70px 20px;
             min-height: 100vh;
         }
-
         .toast {
             position: fixed;
             top: 80px;
@@ -38,7 +36,6 @@
             white-space: nowrap;
         }
         .toast.show { opacity: 1; }
-
         .tab-bar {
             position: fixed;
             bottom: 12px;
@@ -83,19 +80,15 @@
             background: rgba(0,0,0,0.1);
             color: #000;
         }
-
         .page { display: none; }
         .page.active { display: block; }
-
         .container { max-width: 450px; margin: 0 auto; }
-
         .card {
             border-radius: 28px;
             padding: 24px;
             margin-bottom: 24px;
             box-shadow: 0 6px 14px rgba(0,0,0,0.1);
         }
-
         .btn {
             width: 100%;
             padding: 12px;
@@ -110,12 +103,10 @@
             opacity: 0.5;
             cursor: not-allowed;
         }
-
         .game-area {
             text-align: center;
             padding: 10px 0;
         }
-
         .click-circle {
             width: 220px;
             height: 220px;
@@ -159,12 +150,10 @@
         .click-effect.active {
             animation: clickRipple 0.3s ease-out forwards;
         }
-
         @keyframes clickRipple {
             0% { opacity: 1; transform: scale(1); }
             100% { opacity: 0; transform: scale(1.8); }
         }
-
         .leaderboard-btn {
             padding: 8px 16px;
             border: 2px solid rgba(255,255,255,0.2);
@@ -183,7 +172,6 @@
         .leaderboard-btn:active {
             transform: scale(0.95);
         }
-
         .modal-overlay {
             display: none;
             position: fixed;
@@ -199,7 +187,6 @@
             padding: 20px;
         }
         .modal-overlay.active { display: flex; }
-
         .modal-content {
             max-width: 400px;
             width: 100%;
@@ -216,7 +203,6 @@
             background: #ffffff;
             color: #1c1c1e;
         }
-
         .modal-header {
             display: flex;
             justify-content: space-between;
@@ -239,7 +225,6 @@
             color: inherit;
         }
         .modal-close:hover { opacity: 1; }
-
         .leaderboard-list {
             list-style: none;
             padding: 0;
@@ -279,13 +264,11 @@
         body.theme-light .leaderboard-item.me {
             border-color: rgba(0,0,0,0.2);
         }
-
         .leaderboard-loading {
             text-align: center;
             padding: 20px;
             opacity: 0.7;
         }
-
         .avatar-container {
             display: flex;
             justify-content: center;
@@ -346,7 +329,6 @@
             border-radius: 50%;
         }
         .settings-icon:active { transform: scale(0.9); }
-
         .settings-modal .modal-content {
             max-width: 320px;
         }
@@ -385,7 +367,6 @@
             color: #1c1c1e;
         }
         .avatar-settings { margin: 16px 0; }
-
         .support-input, .support-textarea {
             width: 100%;
             padding: 12px;
@@ -807,7 +788,7 @@
             applyTheme(idx);
         }
 
-        // ===== ИГРА (счёт НИКОГДА не уменьшается, передаём на сервер максимум) =====
+        // ===== ИГРА =====
         let currentScore = 0;
         const clickCircle = document.getElementById('clickCircle');
         const scoreDisplay = document.getElementById('gameScore');
@@ -837,15 +818,19 @@
                     body: JSON.stringify({
                         userId: user.id,
                         username: user.username || 'anon',
-                        score: currentScore   // отправляем актуальный локальный счёт
+                        score: currentScore
                     })
                 });
                 const data = await res.json();
                 if (data.success) {
-                    // Если сервер вернул больше – обновляем локальный (но такого не должно быть, если мы всегда отправляем максимум)
+                    // Если сервер вернул больше – обновляем (но не должно случиться)
                     if (data.score > currentScore) {
                         currentScore = data.score;
                         scoreDisplay.innerText = currentScore;
+                    }
+                    // Если модалка лидерборда открыта – обновляем её
+                    if (leaderboardModal.classList.contains('active')) {
+                        loadLeaderboard();
                     }
                 } else {
                     showToast(translations[currentLang].clickError);
@@ -861,7 +846,7 @@
             currentScore++;
             scoreDisplay.innerText = currentScore;
             playClickAnimation();
-            sendClick(); // асинхронно, не ждём
+            sendClick(); // асинхронно
         }
 
         clickCircle.addEventListener('click', handleClick);
@@ -886,12 +871,12 @@
             }
         }
 
-        // Периодическая синхронизация (каждые 5 секунд)
+        // Синхронизация каждые 2 секунды
         setInterval(() => {
             if (currentTab === 'game') {
                 loadGameData();
             }
-        }, 5000);
+        }, 2000);
 
         // ===== ЛИДЕРБОРД =====
         const leaderboardModal = document.getElementById('leaderboardModal');
