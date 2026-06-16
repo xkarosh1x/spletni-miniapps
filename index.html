@@ -36,6 +36,18 @@
             white-space: nowrap;
         }
         .toast.show { opacity: 1; }
+        /* Стиль для мемных фраз – ярче, крупнее, с эмодзи */
+        .toast.meme {
+            background: linear-gradient(135deg, #f7971e, #ffd200);
+            color: #1a1a2e;
+            font-weight: 700;
+            font-size: 18px;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.6);
+            border: 2px solid #fff;
+            padding: 12px 28px;
+            white-space: normal;
+            max-width: 80%;
+        }
         .tab-bar {
             position: fixed;
             bottom: 12px;
@@ -376,7 +388,7 @@
             background: rgba(255,255,255,0.1);
         }
 
-        /* ===== АНИМАЦИЯ "+1" ===== */
+        /* Анимация "+1" */
         .float-text {
             position: fixed;
             pointer-events: none;
@@ -696,18 +708,230 @@
         const toast = document.getElementById('toast');
         let toastTimeout = null;
 
-        function showToast(message) {
+        function showToast(message, isMeme = false) {
             if (toastTimeout) clearTimeout(toastTimeout);
-            toast.classList.remove('show');
+            toast.classList.remove('show', 'meme');
             void toast.offsetWidth;
             toast.textContent = message;
+            if (isMeme) toast.classList.add('meme');
             toast.classList.add('show');
             toastTimeout = setTimeout(() => {
-                toast.classList.remove('show');
+                toast.classList.remove('show', 'meme');
                 toastTimeout = null;
-            }, 1500);
+            }, 3000);
         }
 
+        // ===== МЕМНЫЕ ФРАЗЫ =====
+        const memePhrases = [
+            "🎉 1000 кликов! Ты безработный?",
+            "🤯 2000! Погоди, ты серьёзно?",
+            "😎 3000! А ты норм?",
+            "🔥 4000! Ты робот?",
+            "💪 5000! Поставь телефон, отдохни",
+            "🚀 6000! Клик-клик-клик",
+            "🤑 7000! Богатей на кликах!",
+            "🤪 8000! Ты сумасшедший!",
+            "🏆 9000! Почти легенда!",
+            "👑 10000! Король кликеров!",
+            "🐱 11000! Кот одобряет",
+            "🍕 12000! Купи пиццу, ты заслужил",
+            "💀 13000! Твои пальцы горят?",
+            "🎈 14000! Поздравляю, ты клик-машина",
+            "⚡ 15000! Молния! Ты быстрее света!",
+            "🌟 16000! Звезда! Ты сияешь!",
+            "🍻 17000! Выпьем за твои клики!",
+            "🎵 18000! Танцуй, пока кликаешь!",
+            "🌈 19000! Радуга кликов!",
+            "🔥 20000! Двадцатка! Ты огонь!"
+        ];
+
+        // ===== ИГРА =====
+        let currentScore = 0;
+        let nextMilestone = 1000; // следующий порог для мемной фразы
+        const clickCircle = document.getElementById('clickCircle');
+        const scoreDisplay = document.getElementById('gameScore');
+        const clickEffect = document.getElementById('clickEffect');
+
+        function showMilestoneMessage(milestone) {
+            const idx = Math.floor(milestone / 1000) - 1; // 1000 -> индекс 0, 2000 -> 1, ...
+            const phrase = memePhrases[idx % memePhrases.length];
+            // Добавляем смайлик и число, если фраза не начинается с эмодзи
+            const finalMessage = phrase || `🎊 ${milestone} кликов! Ты крут!`;
+            showToast(finalMessage, true);
+        }
+
+        function updateScore(newValue) {
+            if (newValue > currentScore) {
+                // Проверяем, не перескочили ли мы через несколько милстоунов
+                let milestone = nextMilestone;
+                while (milestone <= newValue) {
+                    showMilestoneMessage(milestone);
+                    nextMilestone += 1000;
+                    milestone = nextMilestone;
+                }
+                currentScore = newValue;
+                scoreDisplay.innerText = currentScore;
+            }
+        }
+
+        function playClickAnimation() {
+            clickEffect.classList.remove('active');
+            void clickEffect.offsetWidth;
+            clickEffect.classList.add('active');
+            if (navigator.vibrate) navigator.vibrate(10);
+        }
+
+        function showFloatingText(clientX, clientY) {
+            const el = document.createElement('div');
+            el.className = 'float-text';
+            el.textContent = '+1';
+            const offsetX = (Math.random() - 0.5) * 80;
+            const offsetY = (Math.random() - 0.5) * 40 - 20;
+            el.style.left = (clientX + offsetX) + 'px';
+            el.style.top = (clientY + offsetY) + 'px';
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 800);
+        }
+
+        async function syncScore() {
+            if (!user) return;
+            try {
+                const res = await fetch('/api/click', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: user.id,
+                        username: user.username || 'anon',
+                        score: currentScore
+                    })
+                });
+                const data = await res.json();
+                if (data.success && data.score > currentScore) {
+                    updateScore(data.score);
+                }
+            } catch (e) {
+                console.error('Sync error:', e);
+            }
+        }
+
+        function handleClick(e) {
+            if (!user) return;
+            let clientX, clientY;
+            if (e.clientX !== undefined) {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            } else if (e.touches) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                const rect = clickCircle.getBoundingClientRect();
+                clientX = rect.left + rect.width/2;
+                clientY = rect.top + rect.height/2;
+            }
+            showFloatingText(clientX, clientY);
+
+            // Увеличиваем счёт и обрабатываем милстоуны
+            const newScore = currentScore + 1;
+            updateScore(newScore);
+            playClickAnimation();
+            syncScore(); // асинхронно
+        }
+
+        clickCircle.addEventListener('click', handleClick);
+        clickCircle.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            handleClick(e);
+        });
+
+        async function loadGameData() {
+            try {
+                const res = await fetch('/api/leaderboard');
+                const data = await res.json();
+                if (data && data.length > 0) {
+                    const myEntry = data.find(entry => entry.username === (user.username || 'anon'));
+                    if (myEntry) {
+                        // Обновляем счёт, но без показа мемных фраз при загрузке
+                        // Просто устанавливаем значение без вызова updateScore (чтобы не спамить фразами)
+                        if (myEntry.score > currentScore) {
+                            currentScore = myEntry.score;
+                            scoreDisplay.innerText = currentScore;
+                            // Пересчитываем nextMilestone, чтобы он был больше текущего счёта
+                            nextMilestone = Math.floor(currentScore / 1000) * 1000 + 1000;
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error('Load game data error:', e);
+            }
+        }
+
+        // Периодическая синхронизация
+        setInterval(() => {
+            if (currentTab === 'game') {
+                syncScore();
+            }
+        }, 2000);
+
+        // ===== ЛИДЕРБОРД =====
+        const leaderboardModal = document.getElementById('leaderboardModal');
+        const leaderboardOpenBtn = document.getElementById('leaderboardOpenBtn');
+        const leaderboardCloseBtn = document.getElementById('leaderboardCloseBtn');
+        const leaderboardContainer = document.getElementById('leaderboardContainer');
+
+        async function loadLeaderboard() {
+            const t = translations[currentLang];
+            try {
+                const res = await fetch('/api/leaderboard');
+                const data = await res.json();
+                renderLeaderboard(data);
+            } catch (e) {
+                console.error('Leaderboard error:', e);
+                leaderboardContainer.innerHTML = `<div class="leaderboard-loading">${t.loading}</div>`;
+            }
+        }
+
+        function renderLeaderboard(players) {
+            const t = translations[currentLang];
+            if (!players || players.length === 0) {
+                leaderboardContainer.innerHTML = `<div class="leaderboard-loading">${t.leaderboardEmpty}</div>`;
+                return;
+            }
+            let html = '<ul class="leaderboard-list">';
+            players.slice(0, 20).forEach((p, idx) => {
+                const isMe = p.username === (user.username || 'anon');
+                const rank = idx + 1;
+                let cls = 'leaderboard-item';
+                if (rank === 1) cls += ' top1';
+                if (rank === 2) cls += ' top2';
+                if (rank === 3) cls += ' top3';
+                if (isMe) cls += ' me';
+                const nameDisplay = p.username || 'anon';
+                html += `
+                    <li class="${cls}">
+                        <span class="rank">#${rank}</span>
+                        <span class="name">${nameDisplay}${isMe ? t.you : ''}</span>
+                        <span class="score">${p.score}</span>
+                    </li>
+                `;
+            });
+            html += '</ul>';
+            leaderboardContainer.innerHTML = html;
+        }
+
+        leaderboardOpenBtn.addEventListener('click', () => {
+            leaderboardModal.classList.add('active');
+            loadLeaderboard();
+        });
+
+        leaderboardCloseBtn.addEventListener('click', () => {
+            leaderboardModal.classList.remove('active');
+        });
+
+        leaderboardModal.addEventListener('click', (e) => {
+            if (e.target === leaderboardModal) leaderboardModal.classList.remove('active');
+        });
+
+        // ===== ЯЗЫКИ (переводы) =====
         const translations = {
             ru: {
                 tabGame: 'Игра',
@@ -782,6 +1006,7 @@
             currentLang = lang;
         }
 
+        // ===== ТЕМЫ =====
         const themes = [
             { id: 'light', name: 'Светлая', color: '#f1c40f' },
             { id: 'dark', name: 'Тёмная', color: '#9ca3af' },
@@ -808,177 +1033,6 @@
             idx = Math.min(Math.max(0, idx), themes.length - 1);
             applyTheme(idx);
         }
-
-        // ===== ИГРА =====
-        let currentScore = 0;
-        const clickCircle = document.getElementById('clickCircle');
-        const scoreDisplay = document.getElementById('gameScore');
-        const clickEffect = document.getElementById('clickEffect');
-
-        function updateScore(newValue) {
-            if (newValue > currentScore) {
-                currentScore = newValue;
-                scoreDisplay.innerText = currentScore;
-            }
-        }
-
-        function playClickAnimation() {
-            clickEffect.classList.remove('active');
-            void clickEffect.offsetWidth;
-            clickEffect.classList.add('active');
-            if (navigator.vibrate) navigator.vibrate(10);
-        }
-
-        // === ЭФФЕКТ "+1" ===
-        function showFloatingText(clientX, clientY) {
-            const el = document.createElement('div');
-            el.className = 'float-text';
-            el.textContent = '+1';
-            // Случайное смещение по X и Y для разнообразия
-            const offsetX = (Math.random() - 0.5) * 80;
-            const offsetY = (Math.random() - 0.5) * 40 - 20; // небольшой разброс
-            el.style.left = (clientX + offsetX) + 'px';
-            el.style.top = (clientY + offsetY) + 'px';
-            document.body.appendChild(el);
-            // Удаляем после анимации
-            setTimeout(() => el.remove(), 800);
-        }
-
-        // Синхронизация с сервером
-        async function syncScore() {
-            if (!user) return;
-            try {
-                const res = await fetch('/api/click', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        userId: user.id,
-                        username: user.username || 'anon',
-                        score: currentScore
-                    })
-                });
-                const data = await res.json();
-                if (data.success && data.score > currentScore) {
-                    currentScore = data.score;
-                    scoreDisplay.innerText = currentScore;
-                }
-            } catch (e) {
-                console.error('Sync error:', e);
-            }
-        }
-
-        // Обработчик клика
-        function handleClick(e) {
-            if (!user) return;
-            // Координаты для "+1"
-            let clientX, clientY;
-            if (e.clientX !== undefined) {
-                clientX = e.clientX;
-                clientY = e.clientY;
-            } else if (e.touches) {
-                clientX = e.touches[0].clientX;
-                clientY = e.touches[0].clientY;
-            } else {
-                // fallback – центр круга
-                const rect = clickCircle.getBoundingClientRect();
-                clientX = rect.left + rect.width/2;
-                clientY = rect.top + rect.height/2;
-            }
-            showFloatingText(clientX, clientY);
-
-            currentScore++;
-            scoreDisplay.innerText = currentScore;
-            playClickAnimation();
-            syncScore(); // асинхронно
-        }
-
-        clickCircle.addEventListener('click', handleClick);
-        clickCircle.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            handleClick(e);
-        });
-
-        // Загрузка данных с сервера
-        async function loadGameData() {
-            try {
-                const res = await fetch('/api/leaderboard');
-                const data = await res.json();
-                if (data && data.length > 0) {
-                    const myEntry = data.find(entry => entry.username === (user.username || 'anon'));
-                    if (myEntry) {
-                        updateScore(myEntry.score);
-                    }
-                }
-            } catch (e) {
-                console.error('Load game data error:', e);
-            }
-        }
-
-        // Периодическая синхронизация
-        setInterval(() => {
-            if (currentTab === 'game') {
-                syncScore();
-            }
-        }, 2000);
-
-        // ===== ЛИДЕРБОРД =====
-        const leaderboardModal = document.getElementById('leaderboardModal');
-        const leaderboardOpenBtn = document.getElementById('leaderboardOpenBtn');
-        const leaderboardCloseBtn = document.getElementById('leaderboardCloseBtn');
-        const leaderboardContainer = document.getElementById('leaderboardContainer');
-
-        async function loadLeaderboard() {
-            const t = translations[currentLang];
-            try {
-                const res = await fetch('/api/leaderboard');
-                const data = await res.json();
-                renderLeaderboard(data);
-            } catch (e) {
-                console.error('Leaderboard error:', e);
-                leaderboardContainer.innerHTML = `<div class="leaderboard-loading">${t.loading}</div>`;
-            }
-        }
-
-        function renderLeaderboard(players) {
-            const t = translations[currentLang];
-            if (!players || players.length === 0) {
-                leaderboardContainer.innerHTML = `<div class="leaderboard-loading">${t.leaderboardEmpty}</div>`;
-                return;
-            }
-            let html = '<ul class="leaderboard-list">';
-            players.slice(0, 20).forEach((p, idx) => {
-                const isMe = p.username === (user.username || 'anon');
-                const rank = idx + 1;
-                let cls = 'leaderboard-item';
-                if (rank === 1) cls += ' top1';
-                if (rank === 2) cls += ' top2';
-                if (rank === 3) cls += ' top3';
-                if (isMe) cls += ' me';
-                const nameDisplay = p.username || 'anon';
-                html += `
-                    <li class="${cls}">
-                        <span class="rank">#${rank}</span>
-                        <span class="name">${nameDisplay}${isMe ? t.you : ''}</span>
-                        <span class="score">${p.score}</span>
-                    </li>
-                `;
-            });
-            html += '</ul>';
-            leaderboardContainer.innerHTML = html;
-        }
-
-        leaderboardOpenBtn.addEventListener('click', () => {
-            leaderboardModal.classList.add('active');
-            loadLeaderboard();
-        });
-
-        leaderboardCloseBtn.addEventListener('click', () => {
-            leaderboardModal.classList.remove('active');
-        });
-
-        leaderboardModal.addEventListener('click', (e) => {
-            if (e.target === leaderboardModal) leaderboardModal.classList.remove('active');
-        });
 
         // ===== АВАТАР =====
         let currentAvatarBase64 = localStorage.getItem('userAvatar') || null;
@@ -1122,7 +1176,11 @@
 
         (async function init() {
             await loadGameData();
+            // Убедимся, что nextMilestone настроен правильно
+            nextMilestone = Math.floor(currentScore / 1000) * 1000 + 1000;
             await syncScore();
+            // После синхронизации nextMilestone может измениться, обновим
+            nextMilestone = Math.floor(currentScore / 1000) * 1000 + 1000;
         })();
     </script>
 </body>
