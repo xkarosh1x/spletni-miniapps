@@ -807,11 +807,19 @@
             applyTheme(idx);
         }
 
-        // ===== ИГРА =====
+        // ===== ИГРА (счёт НИКОГДА не уменьшается) =====
         let currentScore = 0;
         const clickCircle = document.getElementById('clickCircle');
         const scoreDisplay = document.getElementById('gameScore');
         const clickEffect = document.getElementById('clickEffect');
+
+        // Функция обновления отображения (без уменьшения)
+        function updateScore(newValue) {
+            if (newValue > currentScore) {
+                currentScore = newValue;
+                scoreDisplay.innerText = currentScore;
+            }
+        }
 
         function playClickAnimation() {
             clickEffect.classList.remove('active');
@@ -820,6 +828,7 @@
             if (navigator.vibrate) navigator.vibrate(10);
         }
 
+        // Отправка клика на сервер (асинхронно, без ожидания)
         async function sendClick() {
             if (!user) return;
             try {
@@ -833,13 +842,11 @@
                 });
                 const data = await res.json();
                 if (data.success) {
-                    if (data.score > currentScore) {
-                        currentScore = data.score;
-                        scoreDisplay.innerText = currentScore;
-                    }
+                    // Обновляем счёт только если сервер вернул большее значение
+                    updateScore(data.score);
                 } else {
+                    // При ошибке просто показываем тост, счёт не трогаем
                     showToast(translations[currentLang].clickError);
-                    await loadGameData();
                 }
             } catch (e) {
                 console.error('Click error:', e);
@@ -847,11 +854,14 @@
             }
         }
 
+        // Обработчик клика по кругу – мгновенное увеличение
         function handleClick() {
             if (!user) return;
+            // Увеличиваем локально (оптимистично)
             currentScore++;
             scoreDisplay.innerText = currentScore;
             playClickAnimation();
+            // Отправляем запрос в фоне
             sendClick();
         }
 
@@ -861,6 +871,7 @@
             handleClick();
         });
 
+        // Загрузка данных с сервера (только увеличивает счёт)
         async function loadGameData() {
             try {
                 const res = await fetch('/api/leaderboard');
@@ -868,11 +879,10 @@
                 if (data && data.length > 0) {
                     const myEntry = data.find(entry => entry.username === (user.username || 'anon'));
                     if (myEntry) {
-                        currentScore = myEntry.score;
-                        scoreDisplay.innerText = currentScore;
+                        updateScore(myEntry.score);
                     } else {
-                        currentScore = 0;
-                        scoreDisplay.innerText = '0';
+                        // Если пользователя нет в таблице, счёт остаётся как есть (не сбрасываем)
+                        // Можно ничего не делать
                     }
                 }
             } catch (e) {
@@ -880,6 +890,7 @@
             }
         }
 
+        // Периодическая синхронизация (только вверх)
         setInterval(() => {
             if (currentTab === 'game') {
                 loadGameData();
