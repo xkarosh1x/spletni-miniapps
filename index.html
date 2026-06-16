@@ -808,8 +808,8 @@
             if (navigator.vibrate) navigator.vibrate(10);
         }
 
-        // Отправка на сервер текущего локального счёта
-        async function sendClick() {
+        // Отправка текущего счёта на сервер (синхронизация)
+        async function syncScore() {
             if (!user) return;
             try {
                 const res = await fetch('/api/click', {
@@ -822,31 +822,24 @@
                     })
                 });
                 const data = await res.json();
-                if (data.success) {
-                    // Если сервер вернул больше – обновляем (но не должно случиться)
-                    if (data.score > currentScore) {
-                        currentScore = data.score;
-                        scoreDisplay.innerText = currentScore;
-                    }
-                    // Если модалка лидерборда открыта – обновляем её
-                    if (leaderboardModal.classList.contains('active')) {
-                        loadLeaderboard();
-                    }
-                } else {
-                    showToast(translations[currentLang].clickError);
+                if (data.success && data.score > currentScore) {
+                    // Если сервер вернул больше – обновляем локально
+                    currentScore = data.score;
+                    scoreDisplay.innerText = currentScore;
                 }
             } catch (e) {
-                console.error('Click error:', e);
-                showToast(translations[currentLang].clickError);
+                console.error('Sync error:', e);
             }
         }
 
+        // Обработчик клика
         function handleClick() {
             if (!user) return;
             currentScore++;
             scoreDisplay.innerText = currentScore;
             playClickAnimation();
-            sendClick(); // асинхронно
+            // Отправляем синхронно (но не ждём)
+            syncScore();
         }
 
         clickCircle.addEventListener('click', handleClick);
@@ -855,7 +848,7 @@
             handleClick();
         });
 
-        // Загрузка данных с сервера (обновляем только если серверное значение больше)
+        // Загрузка данных с сервера (для первоначальной синхронизации)
         async function loadGameData() {
             try {
                 const res = await fetch('/api/leaderboard');
@@ -871,10 +864,10 @@
             }
         }
 
-        // Синхронизация каждые 2 секунды
+        // Периодическая синхронизация каждые 2 секунды
         setInterval(() => {
             if (currentTab === 'game') {
-                loadGameData();
+                syncScore();
             }
         }, 2000);
 
@@ -1076,7 +1069,9 @@
         const lastTab = localStorage.getItem('lastTab');
         if (lastTab && pages[lastTab]) showTab(lastTab);
         else showTab('game');
-        loadGameData();
+        await loadGameData();
+        // Сразу синхронизируем счёт после загрузки
+        await syncScore();
     </script>
 </body>
 </html>
