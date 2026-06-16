@@ -577,7 +577,6 @@
     <div id="gamePage" class="page active">
         <div class="container">
             <div class="card">
-                <!-- Заголовок и кнопка лидерборда -->
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
                     <h2 id="gameTitle" style="margin:0;">🖱️ Кликер</h2>
                     <button class="leaderboard-btn" id="leaderboardOpenBtn">🏆 Лидерборд</button>
@@ -823,7 +822,7 @@
             applyTheme(idx);
         }
 
-        // --- ИГРА (кликер с оптимистичным обновлением) ---
+        // ====== ИГРА (с защитой от гонок) ======
         let currentScore = 0;
         const clickCircle = document.getElementById('clickCircle');
         const scoreDisplay = document.getElementById('gameScore');
@@ -836,13 +835,9 @@
             if (navigator.vibrate) navigator.vibrate(10);
         }
 
-        async function handleClick() {
+        // Отправка клика на сервер без ожидания
+        async function sendClick() {
             if (!user) return;
-            // Оптимистичное обновление: сразу увеличиваем число
-            currentScore += 1;
-            scoreDisplay.innerText = currentScore;
-            playClickAnimation();
-
             try {
                 const res = await fetch('/api/click', {
                     method: 'POST',
@@ -854,30 +849,42 @@
                 });
                 const data = await res.json();
                 if (data.success) {
-                    // Если сервер вернул другое значение (например, из-за античита), корректируем
-                    if (data.score !== currentScore) {
+                    // Если сервер вернул значение больше текущего – обновляем
+                    if (data.score > currentScore) {
                         currentScore = data.score;
                         scoreDisplay.innerText = currentScore;
                     }
+                    // Если меньше или равно – ничего не делаем (локально уже больше)
                 } else {
-                    // Если ошибка, показываем тост и перезагружаем данные
                     showToast(translations[currentLang].clickError);
-                    await loadGameData(); // перезагружаем корректное значение
+                    // При ошибке перезагружаем данные с сервера
+                    await loadGameData();
                 }
             } catch (e) {
                 console.error('Click error:', e);
                 showToast(translations[currentLang].clickError);
-                await loadGameData();
             }
         }
 
-        // События клика (мгновенный отклик)
+        // Обработчик клика по кругу – мгновенное увеличение
+        function handleClick() {
+            if (!user) return;
+            // Оптимистичное обновление
+            currentScore++;
+            scoreDisplay.innerText = currentScore;
+            playClickAnimation();
+            // Отправляем запрос асинхронно
+            sendClick();
+        }
+
+        // События
         clickCircle.addEventListener('click', handleClick);
         clickCircle.addEventListener('touchstart', (e) => {
             e.preventDefault();
             handleClick();
         });
 
+        // Загрузка данных с сервера (синхронизация)
         async function loadGameData() {
             try {
                 const res = await fetch('/api/leaderboard');
@@ -887,6 +894,10 @@
                     if (myEntry) {
                         currentScore = myEntry.score;
                         scoreDisplay.innerText = currentScore;
+                    } else {
+                        // Если пользователя нет в лидерборде – сброс до 0
+                        currentScore = 0;
+                        scoreDisplay.innerText = '0';
                     }
                 }
             } catch (e) {
@@ -894,7 +905,14 @@
             }
         }
 
-        // --- ЛИДЕРБОРД (модалка) ---
+        // Автоматическая синхронизация с сервером каждые 3 секунды
+        setInterval(() => {
+            if (currentTab === 'game') {
+                loadGameData();
+            }
+        }, 3000);
+
+        // ====== ЛИДЕРБОРД (модалка) ======
         const leaderboardModal = document.getElementById('leaderboardModal');
         const leaderboardOpenBtn = document.getElementById('leaderboardOpenBtn');
         const leaderboardCloseBtn = document.getElementById('leaderboardCloseBtn');
@@ -1092,7 +1110,7 @@
         const lastTab = localStorage.getItem('lastTab');
         if (lastTab && pages[lastTab]) showTab(lastTab);
         else showTab('game');
-        loadGameData();
+        await loadGameData();
     </script>
 </body>
 </html>
