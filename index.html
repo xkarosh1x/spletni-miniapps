@@ -807,13 +807,12 @@
             applyTheme(idx);
         }
 
-        // ===== ИГРА (счёт НИКОГДА не уменьшается) =====
+        // ===== ИГРА (счёт НИКОГДА не уменьшается, передаём на сервер максимум) =====
         let currentScore = 0;
         const clickCircle = document.getElementById('clickCircle');
         const scoreDisplay = document.getElementById('gameScore');
         const clickEffect = document.getElementById('clickEffect');
 
-        // Функция обновления отображения (без уменьшения)
         function updateScore(newValue) {
             if (newValue > currentScore) {
                 currentScore = newValue;
@@ -828,7 +827,7 @@
             if (navigator.vibrate) navigator.vibrate(10);
         }
 
-        // Отправка клика на сервер (асинхронно, без ожидания)
+        // Отправка на сервер текущего локального счёта
         async function sendClick() {
             if (!user) return;
             try {
@@ -837,15 +836,18 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         userId: user.id,
-                        username: user.username || 'anon'
+                        username: user.username || 'anon',
+                        score: currentScore   // отправляем актуальный локальный счёт
                     })
                 });
                 const data = await res.json();
                 if (data.success) {
-                    // Обновляем счёт только если сервер вернул большее значение
-                    updateScore(data.score);
+                    // Если сервер вернул больше – обновляем локальный (но такого не должно быть, если мы всегда отправляем максимум)
+                    if (data.score > currentScore) {
+                        currentScore = data.score;
+                        scoreDisplay.innerText = currentScore;
+                    }
                 } else {
-                    // При ошибке просто показываем тост, счёт не трогаем
                     showToast(translations[currentLang].clickError);
                 }
             } catch (e) {
@@ -854,15 +856,12 @@
             }
         }
 
-        // Обработчик клика по кругу – мгновенное увеличение
         function handleClick() {
             if (!user) return;
-            // Увеличиваем локально (оптимистично)
             currentScore++;
             scoreDisplay.innerText = currentScore;
             playClickAnimation();
-            // Отправляем запрос в фоне
-            sendClick();
+            sendClick(); // асинхронно, не ждём
         }
 
         clickCircle.addEventListener('click', handleClick);
@@ -871,7 +870,7 @@
             handleClick();
         });
 
-        // Загрузка данных с сервера (только увеличивает счёт)
+        // Загрузка данных с сервера (обновляем только если серверное значение больше)
         async function loadGameData() {
             try {
                 const res = await fetch('/api/leaderboard');
@@ -880,9 +879,6 @@
                     const myEntry = data.find(entry => entry.username === (user.username || 'anon'));
                     if (myEntry) {
                         updateScore(myEntry.score);
-                    } else {
-                        // Если пользователя нет в таблице, счёт остаётся как есть (не сбрасываем)
-                        // Можно ничего не делать
                     }
                 }
             } catch (e) {
@@ -890,7 +886,7 @@
             }
         }
 
-        // Периодическая синхронизация (только вверх)
+        // Периодическая синхронизация (каждые 5 секунд)
         setInterval(() => {
             if (currentTab === 'game') {
                 loadGameData();
