@@ -749,11 +749,10 @@
             8500: "🤓 8500! Твои пальцы — хуйня",
             9000: "😜 9000! Бля, ебать ты ебень нахуй...",
             9500: "🤪 9500! Смирнова уже рядом........",
-            10000: "🔥 10000! Спасибо, теперь сходи нахуй, нищий выблядок",
-            // ===== СЮДА ДОБАВЛЯЙТЕ СВОИ ЧИСЛА И ФРАЗЫ =====
+            10000: "🔥 10000! Спасибо, теперь сходи нахуй, нищий выблядок"
         };
 
-        // Получаем отсортированный список чисел, для которых есть фразы
+        // Получаем отсортированный список чисел
         let pendingMilestones = Object.keys(specialMilestones)
             .map(Number)
             .sort((a, b) => a - b);
@@ -771,7 +770,7 @@
 
         function updateScore(newValue) {
             if (newValue > currentScore) {
-                // Проверяем все ещё не показанные числа из pendingMilestones, которые <= newValue
+                // Проверяем все ещё не показанные числа
                 while (pendingMilestones.length > 0 && pendingMilestones[0] <= newValue) {
                     const milestone = pendingMilestones.shift();
                     showMilestoneMessage(milestone);
@@ -856,11 +855,9 @@
                 if (data && data.length > 0) {
                     const myEntry = data.find(entry => entry.username === (user.username || 'anon'));
                     if (myEntry) {
-                        // Устанавливаем счёт, но не показываем мемы (они уже были показаны ранее)
-                        // Просто обновляем переменные и удаляем из pendingMilestones всё, что <= myEntry.score
                         currentScore = myEntry.score;
                         scoreDisplay.innerText = currentScore;
-                        // Убираем из pendingMilestones все числа, которые уже пройдены
+                        // Удаляем из pending все числа, которые уже пройдены
                         while (pendingMilestones.length > 0 && pendingMilestones[0] <= currentScore) {
                             pendingMilestones.shift();
                         }
@@ -1182,10 +1179,13 @@
 
         (async function init() {
             await loadGameData();
-            // После загрузки данных pendingMilestones уже обновлён (в loadGameData)
-            // Дополнительно синхронизируемся с сервером, чтобы получить актуальный счёт
+            // После загрузки данных удаляем из очереди все уже пройденные числа
+            while (pendingMilestones.length > 0 && pendingMilestones[0] <= currentScore) {
+                pendingMilestones.shift();
+            }
+            // Синхронизируемся с сервером (может обновить счёт)
             await syncScore();
-            // Ещё раз обновим pendingMilestones после синхронизации (на случай если syncScore обновил currentScore)
+            // Ещё раз обновим очередь
             while (pendingMilestones.length > 0 && pendingMilestones[0] <= currentScore) {
                 pendingMilestones.shift();
             }
