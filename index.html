@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Mini App — Профиль + Настройки</title>
+    <title>Mini App — Игра + Профиль + Поддержка</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * {
@@ -109,6 +109,80 @@
             margin-top: 16px;
             cursor: pointer;
         }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Игра (кликер) */
+        .click-area {
+            text-align: center;
+            padding: 20px 0;
+        }
+        .score-display {
+            font-size: 64px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .click-btn {
+            font-size: 28px;
+            padding: 20px 40px;
+            border-radius: 60px;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.1s;
+            user-select: none;
+        }
+        .click-btn:active {
+            transform: scale(0.95);
+        }
+        .click-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Лидерборд */
+        .leaderboard-list {
+            list-style: none;
+            padding: 0;
+        }
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            border-radius: 12px;
+            margin-bottom: 4px;
+            background: rgba(255,255,255,0.05);
+        }
+        .leaderboard-item .rank {
+            font-weight: bold;
+            width: 30px;
+            text-align: center;
+        }
+        .leaderboard-item .name {
+            flex: 1;
+            margin: 0 12px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .leaderboard-item .score {
+            font-weight: bold;
+        }
+        .leaderboard-item.top1 { background: rgba(255,215,0,0.2); }
+        .leaderboard-item.top2 { background: rgba(192,192,192,0.2); }
+        .leaderboard-item.top3 { background: rgba(205,127,50,0.2); }
+        .leaderboard-item.me {
+            border: 1px solid currentColor;
+            border-color: rgba(255,255,255,0.3);
+        }
+
+        .leaderboard-loading {
+            text-align: center;
+            padding: 20px;
+            opacity: 0.7;
+        }
 
         /* Анкета (профиль) */
         .avatar-container {
@@ -158,22 +232,19 @@
             font-size: 14px;
             resize: vertical;
         }
-        /* Кнопка-шестерёнка — увеличенная область клика */
         .settings-icon {
             position: absolute;
-            top: 12px;
-            right: 12px;
+            top: 20px;
+            right: 20px;
             font-size: 28px;
             cursor: pointer;
-            opacity: 0.8;
+            opacity: 0.7;
             transition: 0.1s;
             padding: 8px;
             margin: -8px;
             border-radius: 50%;
-            background: transparent;
-            line-height: 1;
         }
-        .settings-icon:active { transform: scale(0.9); background: rgba(0,0,0,0.1); }
+        .settings-icon:active { transform: scale(0.9); }
 
         /* Модальное окно настроек */
         .modal {
@@ -188,9 +259,7 @@
             align-items: center;
             justify-content: center;
         }
-        .modal.active {
-            display: flex;
-        }
+        .modal.active { display: flex; }
         .modal-content {
             max-width: 320px;
             width: 80%;
@@ -200,12 +269,8 @@
             text-align: center;
             box-shadow: 0 8px 20px rgba(0,0,0,0.5);
         }
-        body.theme-light .modal-content {
-            background: #ffffff;
-        }
-        .modal-content h3 {
-            margin-bottom: 16px;
-        }
+        body.theme-light .modal-content { background: #ffffff; }
+        .modal-content h3 { margin-bottom: 16px; }
         .theme-buttons {
             display: flex;
             flex-wrap: wrap;
@@ -235,23 +300,9 @@
             background: #333;
             color: white;
             border: none;
-            font-weight: bold;
         }
-        .avatar-settings {
-            margin: 16px 0;
-        }
-        .close-modal {
-            margin-top: 16px;
-            background: #555;
-        }
-
-        /* Чаты: заглушка */
-        .chats-placeholder {
-            text-align: center;
-            padding: 40px 20px;
-            opacity: 0.7;
-        }
-        .chats-placeholder .icon { font-size: 64px; margin-bottom: 16px; }
+        .avatar-settings { margin: 16px 0; }
+        .close-modal { margin-top: 16px; background: #555; }
 
         /* Поддержка */
         .support-input, .support-textarea {
@@ -276,10 +327,20 @@
             background: #007aff;
             color: white;
         }
-        body.theme-light textarea {
+        body.theme-light textarea,
+        body.theme-light .support-input,
+        body.theme-light .support-textarea {
             background: #f0f0f2;
             color: #1c1c1e;
             border-color: #ccc;
+        }
+        body.theme-light .click-btn {
+            background: #007aff;
+            color: white;
+        }
+        body.theme-light .lang-btn {
+            background: #ddd;
+            color: #1c1c1e;
         }
 
         body.theme-dark {
@@ -294,10 +355,16 @@
             background: #0d6efd;
             color: white;
         }
-        body.theme-dark textarea {
+        body.theme-dark textarea,
+        body.theme-dark .support-input,
+        body.theme-dark .support-textarea {
             background: #2a2a2a;
             color: #e0e0e0;
             border-color: #444;
+        }
+        body.theme-dark .click-btn {
+            background: #0d6efd;
+            color: white;
         }
 
         body.theme-purple {
@@ -312,10 +379,16 @@
             background: #9b59b6;
             color: white;
         }
-        body.theme-purple textarea {
+        body.theme-purple textarea,
+        body.theme-purple .support-input,
+        body.theme-purple .support-textarea {
             background: #3a235a;
             color: #e2d6ff;
             border-color: #7a4fa0;
+        }
+        body.theme-purple .click-btn {
+            background: #9b59b6;
+            color: white;
         }
 
         body.theme-green {
@@ -330,10 +403,16 @@
             background: #2ecc71;
             color: #0a2a16;
         }
-        body.theme-green textarea {
+        body.theme-green textarea,
+        body.theme-green .support-input,
+        body.theme-green .support-textarea {
             background: #1e5a36;
             color: #c8f0dc;
             border-color: #3a8a5a;
+        }
+        body.theme-green .click-btn {
+            background: #2ecc71;
+            color: #0a2a16;
         }
 
         body.theme-red {
@@ -348,10 +427,16 @@
             background: #e74c3c;
             color: white;
         }
-        body.theme-red textarea {
+        body.theme-red textarea,
+        body.theme-red .support-input,
+        body.theme-red .support-textarea {
             background: #5e2a2a;
             color: #ffd6d6;
             border-color: #b55a5a;
+        }
+        body.theme-red .click-btn {
+            background: #e74c3c;
+            color: white;
         }
 
         body.theme-blue {
@@ -366,24 +451,37 @@
             background: #3b82f6;
             color: white;
         }
-        body.theme-blue textarea {
+        body.theme-blue textarea,
+        body.theme-blue .support-input,
+        body.theme-blue .support-textarea {
             background: #1e3a6e;
             color: #cfe3ff;
             border-color: #5a8ac0;
+        }
+        body.theme-blue .click-btn {
+            background: #3b82f6;
+            color: white;
         }
     </style>
 </head>
 <body>
     <div class="toast" id="toast"></div>
 
-    <!-- Вкладка: Чаты -->
-    <div id="chatsPage" class="page">
+    <!-- Вкладка: Игра (кликер) -->
+    <div id="gamePage" class="page">
         <div class="container">
             <div class="card">
-                <h2 id="chatsTitle">💬 Чаты</h2>
-                <div class="chats-placeholder">
-                    <div class="icon">💭</div>
-                    <p id="chatsPlaceholder">Скоро здесь появятся ваши диалоги...</p>
+                <h2 id="gameTitle">🖱️ Кликер</h2>
+                <div class="click-area">
+                    <div id="gameScore" class="score-display">0</div>
+                    <button class="click-btn" id="clickBtn">👆 КЛИК</button>
+                    <p style="margin-top: 12px; font-size: 14px; opacity: 0.7;" id="gameClicksInfo">Кликов: 0</p>
+                </div>
+            </div>
+            <div class="card">
+                <h3 id="leaderboardTitle">🏆 Лидерборд</h3>
+                <div id="leaderboardContainer">
+                    <div class="leaderboard-loading">Загрузка...</div>
                 </div>
             </div>
         </div>
@@ -421,9 +519,9 @@
 
     <!-- Нижний таб-бар (3 пункта) -->
     <div class="tab-bar">
-        <div class="tab-item" data-tab="chats">
-            <div class="tab-icon">💬</div>
-            <div class="tab-label" id="tabChatsLabel">Чаты</div>
+        <div class="tab-item" data-tab="game">
+            <div class="tab-icon">🎮</div>
+            <div class="tab-label" id="tabGameLabel">Игра</div>
         </div>
         <div class="tab-item" data-tab="profile">
             <div class="tab-icon">👤</div>
@@ -438,21 +536,22 @@
     <!-- Модальное окно настроек -->
     <div id="settingsModal" class="modal">
         <div class="modal-content">
-            <h3 id="modalTitle">⚙️ Настройки</h3>
+            <h3>⚙️ Настройки</h3>
             <div class="theme-buttons" id="themeButtons"></div>
             <div class="lang-buttons">
                 <button class="lang-btn" data-lang="ru">🇷🇺 Русский</button>
                 <button class="lang-btn" data-lang="en">🇬🇧 English</button>
             </div>
             <div class="avatar-settings">
-                <label id="modalAvatarLabel">🖼️ Аватар профиля</label>
-                <input type="file" id="modalAvatarInput" accept="image/*" style="margin-top: 8px;">
+                <label>🖼️ Аватар профиля</label>
+                <input type="file" id="modalAvatarInput" accept="image/*" style="margin-top: 8px; width: 100%;">
             </div>
             <button class="btn close-modal" id="closeModalBtn">Закрыть</button>
         </div>
     </div>
 
     <script>
+        // --- Telegram WebApp и данные пользователя ---
         const tg = window.Telegram.WebApp;
         tg.expand();
         tg.MainButton.hide();
@@ -462,13 +561,13 @@
             user = { id: 123456, first_name: "Игрок", last_name: "", username: "pixel_player" };
         }
 
-        // --- Табы ---
+        // --- Элементы табов ---
         const pages = {
-            chats: document.getElementById('chatsPage'),
+            game: document.getElementById('gamePage'),
             profile: document.getElementById('profilePage'),
             support: document.getElementById('supportPage')
         };
-        let currentTab = 'chats';
+        let currentTab = 'game';
 
         function showTab(tabId) {
             Object.values(pages).forEach(page => page.classList.remove('active'));
@@ -480,6 +579,7 @@
             currentTab = tabId;
             localStorage.setItem('lastTab', tabId);
             if (tabId === 'profile') renderAvatar();
+            if (tabId === 'game') loadGameData();
         }
         document.querySelectorAll('.tab-item').forEach(item => {
             item.addEventListener('click', () => showTab(item.dataset.tab));
@@ -500,51 +600,55 @@
             }, 1500);
         }
 
-        // --- Переводы с добавленным langName и modalTitle ---
+        // --- Языки и переводы ---
         const translations = {
             ru: {
-                langName: 'Русский',
-                tabChats: 'Чаты',
+                tabGame: 'Игра',
                 tabProfile: 'Анкета',
                 tabSupport: 'Поддержка',
-                chatsTitle: '💬 Чаты',
-                chatsPlaceholder: 'Скоро здесь появятся ваши диалоги...',
+                gameTitle: '🖱️ Кликер',
+                leaderboardTitle: '🏆 Лидерборд',
+                gameClicksInfo: 'Кликов: ',
                 supportTitle: '🛠️ Поддержка',
                 supportSubjectPlaceholder: 'Тема',
                 supportMessagePlaceholder: 'Сообщение',
                 supportSendBtn: 'Отправить',
-                supportSent: 'Сообщение отправлено (демо)',
+                supportSent: 'Сообщение отправлено!',
                 labelUsername: 'Username:',
                 labelFirstName: 'Имя:',
                 labelBio: '✏️ Описание профиля',
                 bioPlaceholder: 'Расскажите о себе...',
-                modalTitle: '⚙️ Настройки',
-                modalAvatarLabel: '🖼️ Аватар профиля',
                 toastThemeChanged: 'Тема: ',
                 toastLangChanged: 'Язык: ',
-                toastAvatarUpdated: 'Аватар обновлён'
+                toastAvatarUpdated: 'Аватар обновлён',
+                clickError: 'Ошибка, попробуйте позже',
+                leaderboardEmpty: 'Пока ни одного клика... Стань первым!',
+                loading: 'Загрузка...',
+                you: ' (Вы)'
             },
             en: {
-                langName: 'English',
-                tabChats: 'Chats',
+                tabGame: 'Game',
                 tabProfile: 'Profile',
                 tabSupport: 'Support',
-                chatsTitle: '💬 Chats',
-                chatsPlaceholder: 'Your conversations will appear here soon...',
+                gameTitle: '🖱️ Clicker',
+                leaderboardTitle: '🏆 Leaderboard',
+                gameClicksInfo: 'Clicks: ',
                 supportTitle: '🛠️ Support',
                 supportSubjectPlaceholder: 'Subject',
                 supportMessagePlaceholder: 'Message',
                 supportSendBtn: 'Send',
-                supportSent: 'Message sent (demo)',
+                supportSent: 'Message sent!',
                 labelUsername: 'Username:',
                 labelFirstName: 'Name:',
                 labelBio: '✏️ Profile bio',
                 bioPlaceholder: 'Tell about yourself...',
-                modalTitle: '⚙️ Settings',
-                modalAvatarLabel: '🖼️ Profile avatar',
                 toastThemeChanged: 'Theme: ',
                 toastLangChanged: 'Language: ',
-                toastAvatarUpdated: 'Avatar updated'
+                toastAvatarUpdated: 'Avatar updated',
+                clickError: 'Error, please try again',
+                leaderboardEmpty: 'No clicks yet... Be the first!',
+                loading: 'Loading...',
+                you: ' (You)'
             }
         };
 
@@ -552,11 +656,12 @@
         function applyLanguage(lang) {
             const t = translations[lang];
             if (!t) return;
-            document.getElementById('tabChatsLabel').innerText = t.tabChats;
+            document.getElementById('tabGameLabel').innerText = t.tabGame;
             document.getElementById('tabProfileLabel').innerText = t.tabProfile;
             document.getElementById('tabSupportLabel').innerText = t.tabSupport;
-            document.getElementById('chatsTitle').innerText = t.chatsTitle;
-            document.getElementById('chatsPlaceholder').innerText = t.chatsPlaceholder;
+            document.getElementById('gameTitle').innerText = t.gameTitle;
+            document.getElementById('leaderboardTitle').innerText = t.leaderboardTitle;
+            document.getElementById('gameClicksInfo').innerHTML = t.gameClicksInfo + '<span id="clickCount">0</span>';
             document.getElementById('supportTitle').innerText = t.supportTitle;
             document.getElementById('supportSubject').placeholder = t.supportSubjectPlaceholder;
             document.getElementById('supportMessage').placeholder = t.supportMessagePlaceholder;
@@ -565,20 +670,16 @@
             document.getElementById('labelFirstName').innerHTML = t.labelFirstName;
             document.getElementById('labelBio').innerHTML = t.labelBio;
             document.getElementById('bioInput').placeholder = t.bioPlaceholder;
-            // Обновляем тексты в модалке, если она открыта или не открыта
-            const modalTitle = document.getElementById('modalTitle');
-            if (modalTitle) modalTitle.innerText = t.modalTitle;
-            const modalAvatarLabel = document.getElementById('modalAvatarLabel');
-            if (modalAvatarLabel) modalAvatarLabel.innerText = t.modalAvatarLabel;
             localStorage.setItem('selectedLang', lang);
             currentLang = lang;
-            showToast(t.langName);
+            // Перезагружаем лидерборд с новым языком
+            loadLeaderboard();
         }
 
-        // --- Темы (цвет тёмной темы исправлен на серый) ---
+        // --- Темы (6 цветов) ---
         const themes = [
             { id: 'light',  name: 'Светлая',  color: '#f1c40f' },
-            { id: 'dark',   name: 'Тёмная',   color: '#9ca3af' },      // исправлено: серый вместо жёлтого
+            { id: 'dark',   name: 'Тёмная',   color: '#9ca3af' },
             { id: 'purple', name: 'Фиолетовая', color: '#cd9eff' },
             { id: 'green',  name: 'Зелёная',  color: '#7bed9f' },
             { id: 'red',    name: 'Красная',  color: '#ff8a7a' },
@@ -601,6 +702,104 @@
             idx = Math.min(Math.max(0, idx), themes.length - 1);
             applyTheme(idx);
         }
+
+        // --- Игра (кликер) ---
+        let currentScore = 0;
+        const scoreDisplay = document.getElementById('gameScore');
+        const clickBtn = document.getElementById('clickBtn');
+        const clickCountSpan = document.getElementById('clickCount');
+
+        async function loadGameData() {
+            // Загружаем текущий счёт пользователя через лидерборд
+            try {
+                const res = await fetch('/api/leaderboard');
+                const data = await res.json();
+                if (data && data.length > 0) {
+                    const myEntry = data.find(entry => entry.username === (user.username || 'anon'));
+                    if (myEntry) {
+                        currentScore = myEntry.score;
+                        scoreDisplay.innerText = currentScore;
+                        if (clickCountSpan) clickCountSpan.innerText = currentScore;
+                    }
+                }
+                renderLeaderboard(data);
+            } catch (e) {
+                console.error('Load game data error:', e);
+            }
+        }
+
+        async function handleClick() {
+            if (!user) return;
+            clickBtn.disabled = true;
+            try {
+                const res = await fetch('/api/click', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: user.id,
+                        username: user.username || 'anon'
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    currentScore = data.score;
+                    scoreDisplay.innerText = currentScore;
+                    if (clickCountSpan) clickCountSpan.innerText = currentScore;
+                    // Обновляем лидерборд
+                    await loadLeaderboard();
+                } else {
+                    showToast(translations[currentLang].clickError);
+                }
+            } catch (e) {
+                console.error('Click error:', e);
+                showToast(translations[currentLang].clickError);
+            }
+            clickBtn.disabled = false;
+        }
+
+        async function loadLeaderboard() {
+            const container = document.getElementById('leaderboardContainer');
+            const t = translations[currentLang];
+            try {
+                const res = await fetch('/api/leaderboard');
+                const data = await res.json();
+                renderLeaderboard(data);
+            } catch (e) {
+                console.error('Leaderboard error:', e);
+                container.innerHTML = `<div class="leaderboard-loading">${t.loading}</div>`;
+            }
+        }
+
+        function renderLeaderboard(players) {
+            const container = document.getElementById('leaderboardContainer');
+            const t = translations[currentLang];
+            if (!players || players.length === 0) {
+                container.innerHTML = `<div class="leaderboard-loading">${t.leaderboardEmpty}</div>`;
+                return;
+            }
+            let html = '<ul class="leaderboard-list">';
+            players.slice(0, 20).forEach((p, idx) => {
+                const isMe = p.username === (user.username || 'anon');
+                const rank = idx + 1;
+                let cls = 'leaderboard-item';
+                if (rank === 1) cls += ' top1';
+                if (rank === 2) cls += ' top2';
+                if (rank === 3) cls += ' top3';
+                if (isMe) cls += ' me';
+                const nameDisplay = p.username || 'anon';
+                html += `
+                    <li class="${cls}">
+                        <span class="rank">#${rank}</span>
+                        <span class="name">${nameDisplay}${isMe ? ' ' + t.you : ''}</span>
+                        <span class="score">${p.score}</span>
+                    </li>
+                `;
+            });
+            html += '</ul>';
+            container.innerHTML = html;
+        }
+
+        clickBtn.addEventListener('click', handleClick);
 
         // --- Аватар ---
         let currentAvatarBase64 = localStorage.getItem('userAvatar') || null;
@@ -627,7 +826,7 @@
             localStorage.setItem('userAvatar', base64 || '');
             renderAvatar();
             const t = translations[currentLang];
-            showToast(t.toastAvatarUpdated);
+            showToast(t.toastAvatarUpdated || 'Аватар обновлён');
         }
 
         // --- Профиль: описание ---
@@ -650,7 +849,6 @@
 
         function openModal() {
             modal.classList.add('active');
-            // Обновляем кнопки тем
             themeButtonsContainer.innerHTML = '';
             themes.forEach((theme, idx) => {
                 const dot = document.createElement('div');
@@ -659,7 +857,6 @@
                 dot.style.border = idx === currentThemeIndex ? '3px solid white' : '2px solid rgba(255,255,255,0.3)';
                 dot.addEventListener('click', () => {
                     applyTheme(idx);
-                    // обновить обводку
                     document.querySelectorAll('.theme-dot').forEach(d => d.style.border = '2px solid rgba(255,255,255,0.3)');
                     dot.style.border = '3px solid white';
                 });
@@ -674,82 +871,61 @@
         modal.addEventListener('click', (e) => {
             if (e.target === modal) closeModal();
         });
-
-        // Переключение языка в модалке
         document.querySelectorAll('.lang-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const lang = btn.dataset.lang;
                 applyLanguage(lang);
-                // Не закрываем модалку, чтобы продолжить настройку
             });
         });
-
-        // Загрузка аватара через модалку
         modalAvatarInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file && file.type.startsWith('image/')) {
                 const reader = new FileReader();
-                reader.onload = (ev) => {
-                    saveAvatar(ev.target.result);
-                };
+                reader.onload = (ev) => saveAvatar(ev.target.result);
                 reader.readAsDataURL(file);
             } else {
-                const t = translations[currentLang];
-                showToast(t.bioPlaceholder === 'Расскажите о себе...' ? 'Выберите изображение' : 'Select an image');
+                showToast('Выберите изображение');
             }
         });
 
-        // --- Поддержка: отправка через POST на сервер ---
-document.getElementById('sendSupportBtn').addEventListener('click', async () => {
-    const subject = document.getElementById('supportSubject').value;
-    const message = document.getElementById('supportMessage').value;
-    const t = translations[currentLang];
-
-    if (!subject.trim() || !message.trim()) {
-        showToast(t.supportSubjectPlaceholder === 'Тема' ? 'Заполните тему и сообщение' : 'Fill subject and message');
-        return;
-    }
-
-    // Получаем данные пользователя из Telegram (если есть)
-    const userId = tg.initDataUnsafe?.user?.id || null;
-    const username = tg.initDataUnsafe?.user?.username || null;
-    const firstName = tg.initDataUnsafe?.user?.first_name || null;
-
-    // Отключаем кнопку на время отправки, чтобы избежать повторных кликов
-    const sendBtn = document.getElementById('sendSupportBtn');
-    sendBtn.disabled = true;
-    sendBtn.innerText = '⏳ Отправка...';
-
-    try {
-        const response = await fetch('/api/support', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                subject: subject.trim(),
-                message: message.trim(),
-                userId: userId,
-                username: username,
-                firstName: firstName
-            })
+        // --- Поддержка: отправка ---
+        document.getElementById('sendSupportBtn').addEventListener('click', async () => {
+            const subject = document.getElementById('supportSubject').value;
+            const message = document.getElementById('supportMessage').value;
+            const t = translations[currentLang];
+            if (!subject.trim() || !message.trim()) {
+                showToast(t.supportSubjectPlaceholder === 'Тема' ? 'Заполните тему и сообщение' : 'Fill subject and message');
+                return;
+            }
+            const sendBtn = document.getElementById('sendSupportBtn');
+            sendBtn.disabled = true;
+            sendBtn.innerText = '⏳ ...';
+            try {
+                const res = await fetch('/api/support', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        subject: subject.trim(),
+                        message: message.trim(),
+                        userId: user.id,
+                        username: user.username,
+                        firstName: user.first_name
+                    })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    showToast(t.supportSent);
+                    document.getElementById('supportSubject').value = '';
+                    document.getElementById('supportMessage').value = '';
+                } else {
+                    showToast(data.error || 'Ошибка отправки');
+                }
+            } catch (e) {
+                showToast('Ошибка соединения');
+            }
+            sendBtn.disabled = false;
+            sendBtn.innerText = t.supportSendBtn;
         });
-
-        const result = await response.json();
-
-        if (response.ok) {
-            showToast(t.supportSent);
-            document.getElementById('supportSubject').value = '';
-            document.getElementById('supportMessage').value = '';
-        } else {
-            showToast(result.error || 'Ошибка отправки. Попробуйте позже.');
-        }
-    } catch (error) {
-        console.error('Ошибка:', error);
-        showToast('Не удалось отправить сообщение. Проверьте интернет.');
-    } finally {
-        sendBtn.disabled = false;
-        sendBtn.innerText = t.supportSendBtn;
-    }
-});
 
         // --- Инициализация ---
         loadSavedTheme();
@@ -757,7 +933,7 @@ document.getElementById('sendSupportBtn').addEventListener('click', async () => 
         renderAvatar();
         const lastTab = localStorage.getItem('lastTab');
         if (lastTab && pages[lastTab]) showTab(lastTab);
-        else showTab('chats');
+        else showTab('game');
     </script>
 </body>
 </html>
