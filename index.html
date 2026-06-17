@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Mini App — Сплетни-тык</title>
+    <title>Mini App — Сплетни-тык (Beta)</title>
     <!-- Пытаемся загрузить Telegram WebApp, если не загрузится – будет заглушка -->
     <script src="https://telegram.org/js/telegram-web-app.js" onerror="window.telegramFallback=true;"></script>
     <style>
-        /* Весь CSS без изменений (тот же, что был) */
         * {
             margin: 0;
             padding: 0;
@@ -79,6 +78,15 @@
         }
         .tab-item .tab-icon { font-size: 24px; }
         .tab-item .tab-label { font-size: 12px; }
+        .tab-item .tab-beta {
+            font-size: 8px;
+            color: #ffd700;
+            background: rgba(255,215,0,0.15);
+            padding: 1px 6px;
+            border-radius: 8px;
+            letter-spacing: 0.5px;
+            margin-top: 1px;
+        }
         .tab-item.active {
             background: rgba(255,255,255,0.2);
             color: #fff;
@@ -93,14 +101,39 @@
             background: rgba(0,0,0,0.1);
             color: #000;
         }
+        body.theme-light .tab-item .tab-beta {
+            background: rgba(255,215,0,0.3);
+            color: #b8860b;
+        }
         .page { display: none; }
         .page.active { display: block; }
         .container { max-width: 450px; margin: 0 auto; }
         .card {
+            position: relative;
             border-radius: 28px;
             padding: 24px;
             margin-bottom: 24px;
             box-shadow: 0 6px 14px rgba(0,0,0,0.1);
+        }
+        .beta-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(255,215,0,0.15);
+            color: #ffd700;
+            font-size: 10px;
+            font-weight: bold;
+            padding: 2px 10px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,215,0,0.3);
+            letter-spacing: 1px;
+            text-shadow: 0 0 8px rgba(255,215,0,0.2);
+            pointer-events: none;
+        }
+        body.theme-light .beta-badge {
+            background: rgba(255,215,0,0.25);
+            color: #b8860b;
+            border-color: #d4a017;
         }
         .btn {
             width: 100%;
@@ -585,8 +618,8 @@
     <div id="gamePage" class="page active">
         <div class="container">
             <div class="card">
+                <span class="beta-badge">BETA</span>
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                    <!-- Заголовок теперь будет "Сплетни-тык" (из локализации) -->
                     <h2 id="gameTitle" style="margin:0;">Сплетни-тык</h2>
                     <button class="leaderboard-btn" id="leaderboardOpenBtn">🏆 Лидерборд</button>
                 </div>
@@ -604,6 +637,7 @@
     <div id="profilePage" class="page">
         <div class="container">
             <div class="card" style="position: relative;">
+                <span class="beta-badge">BETA</span>
                 <div class="settings-icon" id="settingsIcon">⚙️</div>
                 <div class="avatar-container" id="avatarContainer"></div>
                 <div class="profile-info">
@@ -618,10 +652,11 @@
         </div>
     </div>
 
-    <!-- Страница поддержки (больше не используется, но оставим для совместимости) -->
+    <!-- Страница поддержки (не используется, но бейдж тоже есть) -->
     <div id="supportPage" class="page">
         <div class="container">
             <div class="card">
+                <span class="beta-badge">BETA</span>
                 <h2 id="supportTitle">🛠️ Поддержка</h2>
                 <p>Эта страница больше не используется.</p>
             </div>
@@ -665,14 +700,17 @@
         <div class="tab-item active" data-tab="game">
             <div class="tab-icon">🎮</div>
             <div class="tab-label" id="tabGameLabel">Игра</div>
+            <div class="tab-beta">BETA</div>
         </div>
         <div class="tab-item" data-tab="profile">
             <div class="tab-icon">👤</div>
             <div class="tab-label" id="tabProfileLabel">Анкета</div>
+            <div class="tab-beta">BETA</div>
         </div>
         <div class="tab-item" data-tab="support">
             <div class="tab-icon">🛠️</div>
             <div class="tab-label" id="tabSupportLabel">Поддержка</div>
+            <div class="tab-beta">BETA</div>
         </div>
     </div>
 
@@ -982,13 +1020,13 @@
             if (e.target === leaderboardModal) leaderboardModal.classList.remove('active');
         });
 
-        // ===== ЯЗЫКИ (с изменённым названием игры) =====
+        // ===== ЯЗЫКИ (с бета-пометкой) =====
         const translations = {
             ru: {
                 tabGame: 'Игра',
                 tabProfile: 'Анкета',
                 tabSupport: 'Поддержка',
-                gameTitle: 'Сплетни-тык',          // <-- изменено
+                gameTitle: 'Сплетни-тык',
                 leaderboardTitle: '🏆 Лидерборд',
                 supportTitle: '🛠️ Поддержка',
                 supportSubjectPlaceholder: 'Тема',
@@ -1012,7 +1050,7 @@
                 tabGame: 'Game',
                 tabProfile: 'Profile',
                 tabSupport: 'Support',
-                gameTitle: '🖱️ Clicker',          // можно оставить или изменить
+                gameTitle: '🖱️ Clicker',
                 leaderboardTitle: '🏆 Leaderboard',
                 supportTitle: '🛠️ Support',
                 supportSubjectPlaceholder: 'Subject',
@@ -1039,10 +1077,12 @@
         function applyLanguage(lang) {
             const t = translations[lang];
             if (!t) return;
+            // Обновляем лейблы табов (без "Beta" – они уже есть в HTML)
             document.getElementById('tabGameLabel').innerText = t.tabGame;
             document.getElementById('tabProfileLabel').innerText = t.tabProfile;
             document.getElementById('tabSupportLabel').innerText = t.tabSupport;
-            document.getElementById('gameTitle').innerText = t.gameTitle;  // обновляем заголовок
+            // Заголовки страниц
+            document.getElementById('gameTitle').innerText = t.gameTitle;
             document.getElementById('leaderboardOpenBtn').innerText = t.leaderboardBtn;
             document.getElementById('supportTitle').innerText = t.supportTitle;
             document.getElementById('supportSubject').placeholder = t.supportSubjectPlaceholder;
