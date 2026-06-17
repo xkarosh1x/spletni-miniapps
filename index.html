@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Mini App — Кликер</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <title>Mini App — Сплетни-тык</title>
+    <!-- Пытаемся загрузить Telegram WebApp, если не загрузится – будет заглушка -->
+    <script src="https://telegram.org/js/telegram-web-app.js" onerror="window.telegramFallback=true;"></script>
     <style>
+        /* Весь CSS без изменений (тот же, что был) */
         * {
             margin: 0;
             padding: 0;
@@ -386,7 +388,6 @@
             margin-bottom: 16px;
             background: rgba(255,255,255,0.1);
         }
-
         .float-text {
             position: fixed;
             pointer-events: none;
@@ -580,11 +581,13 @@
 <body>
     <div class="toast" id="toast"></div>
 
+    <!-- Главная страница (игра) -->
     <div id="gamePage" class="page active">
         <div class="container">
             <div class="card">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                    <h2 id="gameTitle" style="margin:0;">🖱️ Кликер</h2>
+                    <!-- Заголовок теперь будет "Сплетни-тык" (из локализации) -->
+                    <h2 id="gameTitle" style="margin:0;">Сплетни-тык</h2>
                     <button class="leaderboard-btn" id="leaderboardOpenBtn">🏆 Лидерборд</button>
                 </div>
                 <div class="game-area">
@@ -597,6 +600,7 @@
         </div>
     </div>
 
+    <!-- Страница профиля (анкета) -->
     <div id="profilePage" class="page">
         <div class="container">
             <div class="card" style="position: relative;">
@@ -614,17 +618,17 @@
         </div>
     </div>
 
+    <!-- Страница поддержки (больше не используется, но оставим для совместимости) -->
     <div id="supportPage" class="page">
         <div class="container">
             <div class="card">
                 <h2 id="supportTitle">🛠️ Поддержка</h2>
-                <input type="text" id="supportSubject" class="support-input" placeholder="Тема">
-                <textarea id="supportMessage" rows="4" class="support-textarea" placeholder="Сообщение"></textarea>
-                <button class="btn" id="sendSupportBtn">Отправить</button>
+                <p>Эта страница больше не используется.</p>
             </div>
         </div>
     </div>
 
+    <!-- Модалка лидерборда -->
     <div class="modal-overlay" id="leaderboardModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -637,6 +641,7 @@
         </div>
     </div>
 
+    <!-- Модалка настроек -->
     <div class="modal-overlay settings-modal" id="settingsModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -655,6 +660,7 @@
         </div>
     </div>
 
+    <!-- Нижний таб-бар -->
     <div class="tab-bar">
         <div class="tab-item active" data-tab="game">
             <div class="tab-icon">🎮</div>
@@ -671,13 +677,46 @@
     </div>
 
     <script>
-        const tg = window.Telegram.WebApp;
+        // ===== ЗАГЛУШКА для Telegram WebApp =====
+        let tg = null;
+        if (typeof window.Telegram !== 'undefined' && window.Telegram.WebApp) {
+            tg = window.Telegram.WebApp;
+        } else {
+            tg = {
+                expand: function() {},
+                MainButton: {
+                    hide: function() {},
+                    show: function() {},
+                    setText: function() {},
+                    onClick: function() {}
+                },
+                close: function() {},
+                sendData: function() {},
+                showPopup: function(params, callback) {
+                    if (callback) callback('ok');
+                    // fallback alert
+                    alert(params.message || 'Soon...');
+                },
+                initDataUnsafe: {
+                    user: {
+                        id: 123456,
+                        first_name: 'Гость',
+                        last_name: '',
+                        username: 'guest'
+                    }
+                },
+                setBackgroundColor: function() {},
+                setHeaderColor: function() {}
+            };
+            console.warn('Telegram WebApp не загружен, используется заглушка');
+        }
+
         tg.expand();
         tg.MainButton.hide();
 
         let user = tg.initDataUnsafe?.user || null;
         if (!user) {
-            user = { id: 123456, first_name: "Игрок", last_name: "", username: "pixel_player" };
+            user = { id: 123456, first_name: 'Игрок', last_name: '', username: 'pixel_player' };
         }
 
         const pages = {
@@ -687,7 +726,19 @@
         };
         let currentTab = 'game';
 
+        // Функция переключения вкладок с обработкой поддержки
         function showTab(tabId) {
+            // Если нажали на поддержку – показываем popup и выходим
+            if (tabId === 'support') {
+                tg.showPopup({
+                    title: 'Поддержка',
+                    message: 'Soon...',
+                    buttons: [{type: 'ok'}]
+                });
+                return; // не переключаем страницу
+            }
+
+            // Иначе переключаем страницу
             Object.values(pages).forEach(page => page.classList.remove('active'));
             pages[tabId].classList.add('active');
             document.querySelectorAll('.tab-item').forEach(item => {
@@ -699,6 +750,7 @@
             if (tabId === 'profile') renderAvatar();
             if (tabId === 'game') loadGameData();
         }
+
         document.querySelectorAll('.tab-item').forEach(item => {
             item.addEventListener('click', () => showTab(item.dataset.tab));
         });
@@ -719,9 +771,7 @@
             }, 3000);
         }
 
-        // ============================================================
-        //  ВАШ СПИСОК МЕМОВ (ручной)
-        // ============================================================
+        // ===== ВАШ СПИСОК МЕМОВ =====
         const specialMilestones = {
             500: "🤣 500 кликов! Ты чё, ебень, пары прогулял?",
             666: "👺 DEMON! SMIRNOVA?",
@@ -754,7 +804,6 @@
             10000: "🔥 10000! Спасибо, теперь сходи нахуй, нищий выблядок"
         };
 
-        // Очередь чисел, которые ещё не были достигнуты
         let pendingMilestones = Object.keys(specialMilestones)
             .map(Number)
             .sort((a, b) => a - b);
@@ -772,7 +821,6 @@
 
         function updateScore(newValue) {
             if (newValue > currentScore) {
-                // Показываем все мемы, чей порог достигнут или превышен
                 while (pendingMilestones.length > 0 && pendingMilestones[0] <= newValue) {
                     const milestone = pendingMilestones.shift();
                     showMilestoneMessage(milestone);
@@ -859,7 +907,6 @@
                     if (myEntry) {
                         currentScore = myEntry.score;
                         scoreDisplay.innerText = currentScore;
-                        // Удаляем из очереди все числа, которые уже пройдены
                         while (pendingMilestones.length > 0 && pendingMilestones[0] <= currentScore) {
                             pendingMilestones.shift();
                         }
@@ -870,7 +917,6 @@
             }
         }
 
-        // Периодическая синхронизация (каждые 2 секунды)
         setInterval(() => {
             if (currentTab === 'game') {
                 syncScore();
@@ -936,13 +982,13 @@
             if (e.target === leaderboardModal) leaderboardModal.classList.remove('active');
         });
 
-        // ===== ЯЗЫКИ =====
+        // ===== ЯЗЫКИ (с изменённым названием игры) =====
         const translations = {
             ru: {
                 tabGame: 'Игра',
                 tabProfile: 'Анкета',
                 tabSupport: 'Поддержка',
-                gameTitle: '🖱️ Кликер',
+                gameTitle: 'Сплетни-тык',          // <-- изменено
                 leaderboardTitle: '🏆 Лидерборд',
                 supportTitle: '🛠️ Поддержка',
                 supportSubjectPlaceholder: 'Тема',
@@ -966,7 +1012,7 @@
                 tabGame: 'Game',
                 tabProfile: 'Profile',
                 tabSupport: 'Support',
-                gameTitle: '🖱️ Clicker',
+                gameTitle: '🖱️ Clicker',          // можно оставить или изменить
                 leaderboardTitle: '🏆 Leaderboard',
                 supportTitle: '🛠️ Support',
                 supportSubjectPlaceholder: 'Subject',
@@ -996,7 +1042,7 @@
             document.getElementById('tabGameLabel').innerText = t.tabGame;
             document.getElementById('tabProfileLabel').innerText = t.tabProfile;
             document.getElementById('tabSupportLabel').innerText = t.tabSupport;
-            document.getElementById('gameTitle').innerText = t.gameTitle;
+            document.getElementById('gameTitle').innerText = t.gameTitle;  // обновляем заголовок
             document.getElementById('leaderboardOpenBtn').innerText = t.leaderboardBtn;
             document.getElementById('supportTitle').innerText = t.supportTitle;
             document.getElementById('supportSubject').placeholder = t.supportSubjectPlaceholder;
@@ -1132,45 +1178,6 @@
             }
         });
 
-        // ===== ПОДДЕРЖКА =====
-        document.getElementById('sendSupportBtn').addEventListener('click', async () => {
-            const subject = document.getElementById('supportSubject').value;
-            const message = document.getElementById('supportMessage').value;
-            const t = translations[currentLang];
-            if (!subject.trim() || !message.trim()) {
-                showToast(t.supportSubjectPlaceholder === 'Тема' ? 'Заполните тему и сообщение' : 'Fill subject and message');
-                return;
-            }
-            const sendBtn = document.getElementById('sendSupportBtn');
-            sendBtn.disabled = true;
-            sendBtn.innerText = '⏳ ...';
-            try {
-                const res = await fetch('/api/support', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        subject: subject.trim(),
-                        message: message.trim(),
-                        userId: user.id,
-                        username: user.username,
-                        firstName: user.first_name
-                    })
-                });
-                const data = await res.json();
-                if (res.ok) {
-                    showToast(t.supportSent);
-                    document.getElementById('supportSubject').value = '';
-                    document.getElementById('supportMessage').value = '';
-                } else {
-                    showToast(data.error || 'Ошибка отправки');
-                }
-            } catch (e) {
-                showToast('Ошибка соединения');
-            }
-            sendBtn.disabled = false;
-            sendBtn.innerText = t.supportSendBtn;
-        });
-
         // ===== ИНИЦИАЛИЗАЦИЯ =====
         loadSavedTheme();
         applyLanguage(currentLang);
@@ -1181,13 +1188,10 @@
 
         (async function init() {
             await loadGameData();
-            // Очищаем очередь от чисел, которые уже пройдены
             while (pendingMilestones.length > 0 && pendingMilestones[0] <= currentScore) {
                 pendingMilestones.shift();
             }
-            // Синхронизация
             await syncScore();
-            // Ещё раз очищаем после синхронизации
             while (pendingMilestones.length > 0 && pendingMilestones[0] <= currentScore) {
                 pendingMilestones.shift();
             }
